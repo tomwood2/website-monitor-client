@@ -1,8 +1,9 @@
 import React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { Route, Switch } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { PageLoader } from "./components/page-loader";
-import { ProtectedRoute } from "./components/protected-route";
+//import { ProtectedRoute } from "./components/protected-route";
+import { ProtectedComponent } from './components/protected-component';
 import { AdminPage } from "./pages/admin-page";
 import { CallbackPage } from "./pages/callback-page";
 import { HomePage } from "./pages/home-page";
@@ -24,15 +25,15 @@ const App = () => {
   }
 
   return (
-    <Switch>
-      <Route path="/" exact component={HomePage} />
-      <ProtectedRoute path="/profile" component={ProfilePage} />
-      <Route path="/public" component={PublicPage} />
-      <ProtectedRoute path="/protected" component={ProtectedPage} />
-      <ProtectedRoute path="/admin" component={AdminPage} />
-      <Route path="/callback" component={CallbackPage} />
-      <Route path="*" component={NotFoundPage} />
-    </Switch>
+    <Routes>
+      <Route path="/" exact element={<HomePage />} />
+      <Route path="/profile" element={<ProtectedComponent component={ProfilePage} />} />
+      <Route path="/public" element={<PublicPage />} />
+      <Route path="/protected" element={<ProtectedComponent component={ProtectedPage} testProp={'test prop value'}/>} />
+      <Route path="/admin" element={<ProtectedComponent component={AdminPage} />} />
+      <Route path="/callback" element={<CallbackPage />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 };
 
