@@ -2,7 +2,6 @@ import React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Route, Routes } from "react-router-dom";
 import { PageLoader } from "./components/page-loader";
-//import { ProtectedRoute } from "./components/protected-route";
 import { ProtectedComponent } from './components/protected-component';
 import { AdminPage } from "./pages/admin-page";
 import { CallbackPage } from "./pages/callback-page";
@@ -11,6 +10,7 @@ import { NotFoundPage } from "./pages/not-found-page";
 import { ProfilePage } from "./pages/profile-page";
 import { ProtectedPage } from "./pages/protected-page";
 import { PublicPage } from "./pages/public-page";
+import UserWatches from './components/UserWatches';
 
 const App = () => {
 
@@ -29,7 +29,8 @@ const App = () => {
       <Route path="/" exact element={<HomePage />} />
       <Route path="/profile" element={<ProtectedComponent component={ProfilePage} />} />
       <Route path="/public" element={<PublicPage />} />
-      <Route path="/protected" element={<ProtectedComponent component={ProtectedPage} testProp={'test prop value'}/>} />
+      {/* <Route path="/protected" element={<ProtectedComponent component={ProtectedPage} testProp={'test prop value'}/>} /> */}
+      <Route path="/protected" element={<ProtectedComponent component={UserWatches} testProp={'test prop value'}/>} />
       <Route path="/admin" element={<ProtectedComponent component={AdminPage} />} />
       <Route path="/callback" element={<CallbackPage />} />
       <Route path="*" element={<NotFoundPage />} />
