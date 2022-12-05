@@ -15,7 +15,8 @@ function UserWatches() {
 
     console.log('in UserWatches.useEffect');
 
-    const baseUrl = 'http://localhost:3000/';
+//    const baseUrl = 'http://localhost:3000/';
+    const baseUrl = 'https://tomwood2.com/';
     const email = user.email;
     const url = `${baseUrl}monitor/site/userWatches/${email}`;
 

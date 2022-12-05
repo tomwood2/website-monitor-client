@@ -7,6 +7,7 @@ export const LogoutButton = () => {
   const handleLogout = () => {
     logout({
       returnTo: window.location.origin,
+      // returnTo: 'https://tomwood2.com/',
     });
   };
 
