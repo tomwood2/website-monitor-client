@@ -1,22 +1,24 @@
 import React from 'react';
-import './UserWatches.css';
+import { withAuthenticationRequired } from "@auth0/auth0-react";
+import './my-watches-page.css';
 import {useState, useEffect} from 'react';
 import axios from 'axios';
 import { useAuth0 } from '@auth0/auth0-react';
-import { PageLayout } from './page-layout';
+import { PageLayout } from '../components/page-layout';
+import { PageLoader } from "../components/page-loader";
 
 
-function UserWatches() {
+const MyWatchesPage = () => {
   const { user } = useAuth0();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
 
   useEffect(() =>  {
 
-    console.log('in UserWatches.useEffect');
+    console.log('in MyWatches.useEffect');
 
 //    const baseUrl = 'http://localhost:3000/';
-    const baseUrl = 'https://tomwood2.com/';
+    const baseUrl = 'https://api.tomwood2.com/';
     const email = user.email;
     const url = `${baseUrl}monitor/site/userWatches/${email}`;
 
@@ -41,42 +43,21 @@ function UserWatches() {
   if (loading) {
     return (<div>Loading</div>)
   }
-
-  // return (
-  //   <div className="UserWatches">
-  //     <header className="UserWatches-header">
-  //       <ul>
-  //         <li>{`ID: ${data.user._id}`}</li>
-  //         <li>{`First Name: ${data.user.firstName}`}</li>
-  //         <li>{`Last Name: ${data.user.lastName}`}</li>
-  //         <li>{`email: ${data.user.email}`}</li>
-  //       </ul>
-  //       <ul>
-  //         {data.userSites.map((site, index) => {
-  //             return (
-  //               <li key={index}>{site.name}</li>
-  //             )
-  //         })}
-  //       </ul>
-  //     </header>
-  //   </div>
-  // );
-
+  
   return (
     <PageLayout>
       <div className="content-layout">
         <h1 id="page-title" className="content__title">
-          User Watches
+          My Watches
         </h1>
         <div className="content__body">
           <p id="page-description">
           <span>
-              You can use the <strong>ID Token</strong> to get the profile
-              information of an authenticated user.
+              Below is the list of choreogrphers that you are watching for new line dances.
             </span>
-            <span>
+            {/* <span>
               <strong>Only authenticated users can access this page.</strong>
-            </span>
+            </span> */}
          </p>
           <div className="profile-grid">
             <div className="profile__header">
@@ -105,6 +86,11 @@ function UserWatches() {
     </PageLayout>
   );
 
-}
+};
 
-export default UserWatches;
+const ProtectedMyWatchesPage = withAuthenticationRequired(MyWatchesPage, {
+  onRedirecting: () => <PageLoader />,
+  returnTo: '/my-watches',
+});
+
+export {ProtectedMyWatchesPage};

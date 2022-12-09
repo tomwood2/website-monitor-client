@@ -1,9 +1,11 @@
 import React from "react";
+import { withAuthenticationRequired } from "@auth0/auth0-react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { CodeSnippet } from "../components/code-snippet";
 import { PageLayout } from "../components/page-layout";
+import { PageLoader } from "../components/page-loader";
 
-export const ProfilePage = () => {
+const ProfilePage = () => {
   const { user } = useAuth0();
 
   return (
@@ -46,3 +48,10 @@ export const ProfilePage = () => {
     </PageLayout>
   );
 };
+
+const ProtectedProfilePage = withAuthenticationRequired(ProfilePage, {
+  onRedirecting: () => <PageLoader />,
+  returnTo: '/profile',
+});
+
+export {ProtectedProfilePage};

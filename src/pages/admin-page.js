@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { withAuthenticationRequired } from "@auth0/auth0-react";
 import { CodeSnippet } from "../components/code-snippet";
 import { PageLayout } from "../components/page-layout";
 import { getAdminResource } from "../services/message.service";
+import { PageLoader } from "../components/page-loader";
 
-export const AdminPage = () => {
+const AdminPage = () => {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -58,3 +60,11 @@ export const AdminPage = () => {
     </PageLayout>
   );
 };
+
+
+const ProtectedAdminPage = withAuthenticationRequired(AdminPage, {
+  onRedirecting: () => <PageLoader />,
+  returnTo: '/admin',
+});
+
+export {ProtectedAdminPage};
