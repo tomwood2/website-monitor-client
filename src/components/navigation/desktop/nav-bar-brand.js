@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 export const NavBarBrand = () => {
   return (
     <div className="nav-bar__brand">
-      <NavLink to="/" exact>
+      <NavLink to="/">
         <header className="nav-bar__logo">Website Monitor</header>
         {/* <img
           className="nav-bar__logo"

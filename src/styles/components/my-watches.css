@@ -1,0 +1,132 @@
+
+.my-watches-button-bar {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: row;
+  column-gap: 1.25rem;
+}
+
+.my-watches-grid {
+  display: flex;
+  flex-direction: column;
+  margin-top: 3rem;
+}
+
+.my-watches-list {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  row-gap: .5rem;
+  column-gap: 1.25rem;
+  grid-auto-rows: auto;
+}
+
+.my-watches-list-cell {
+  display: flex;
+  align-items: center;
+}
+
+.my-watches-dummy-button {
+  visibility: hidden;
+}
+
+.my-watches-delete-button {
+  /* align-self: flex-start; */
+  background-color: rgb(255, 106, 106);
+}
+
+.search-choreographers {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: 0.8rem;
+  margin-top: 2rem;
+  overflow: hidden;
+}
+
+.search-choreographers-title-bar {
+  display: flex;
+  align-items: center;
+  height: 4.8rem;
+  width: 100%;
+
+  background-color: var(--aluminium);
+  color: var(--black);
+
+  /*  responsive */
+
+  font-size: 1.6rem;
+  line-height: 2.4rem;
+  padding: 1.2rem 1.6rem;
+}
+
+.search-choreographers-title {
+  width: 100%;
+  font-weight: 600;
+}
+
+.search-choreographers-content {
+  display: grid;
+  row-gap: 2rem;
+  padding: 2.5rem;
+}
+
+@media only screen and (max-width: 480px) {
+ 
+  .search-choreographers-content {
+    padding: 1.6rem;
+  }
+}
+
+.search-choreographers-search-controls-container {
+  display: grid;
+  /* third column not used for display but pushes first 2 columns left */
+  grid-template-columns: auto auto 1fr;
+  column-gap: 2rem;
+  
+}
+
+.search-chroeographers-search-label {
+  display: flex;
+  align-items: center;
+}
+
+.search-choreographers-results-container {
+  display: grid;
+  /* width: auto; */
+  grid-template-columns: auto 1fr;
+  row-gap: .5rem;
+  column-gap: 1.25rem;
+  grid-auto-rows: auto;
+}
+
+.search-choreographers-results-container div {
+  display: flex;
+  align-items: center;
+}
+
+.search-chroeographers-search-input {
+  width: 32rem;
+}
+
+.search-choreographers-results-add-button {
+  min-width: 6rem;
+  background-color: rgb(63, 139, 128);
+}
+
+/* .my-watches-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  
+  .my-watches-column {
+    display: flex;
+    flex-direction: column;
+    flex-basis: auto;
+    flex: 1;
+    padding: .25rem;
+  } */
+  
+  

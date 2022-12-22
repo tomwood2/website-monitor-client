@@ -24,7 +24,7 @@ const App = () => {
 
   return (
     <Routes>
-      <Route path="/" exact element={<HomePage />} />
+      <Route path="/" element={<HomePage />} />
       <Route path="/profile" element={<ProtectedProfilePage />} />
       <Route path="/public" element={<PublicPage />} />
       <Route path="/my-watches" element={<ProtectedMyWatchesPage />} />
