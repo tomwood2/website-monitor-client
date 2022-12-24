@@ -10,51 +10,71 @@ import { SearchChoreographer } from '../components/search-choreographer';
 
 
 const MyWatchesPage = () => {
-  const { user } = useAuth0();
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState([]);
+  const auth0User = useAuth0().user;
+  // const [loading, setLoading] = useState(true);
 
-  const [message, setMessage] = useState('');
-  const [items, setItems] = useState([]);
-  const [showSearch, setShowSearch] = useState(false);
-  const [editMode, setEditMode] = useState(false);
+  const [userId, setUserId] = useState('');
+  const [choreographers, setChoreographers] = useState([]);
+  const [isModified, setIsModified] = useState(false);
+  const [fetch, setFetch] = useState(0);
+
+  const [showSearch, setShowSearch] = useState(true);
+  const [editMode, setEditMode] = useState(true);
+
+  // const baseUrl = 'http://localhost:3000/';
+  const baseUrl = 'https://api.tomwood2.com/';
+
+useEffect(() => {
+
+    const fetchUser = async () => {
+
+      try {
+
+        // const email = auth0User.email;
+        const url = `${baseUrl}monitor/user/email/${auth0User.email}`;
+
+        const result = await axios.get(url);
+        const user = result.data;
+
+        setUserId(user._id);
+      } catch (error) {
+        console.error(error.message);
+      }
+    };
+
+    if (auth0User.email.length > 0) {
+      fetchUser();
+    }
+
+  }, [auth0User]);
+
 
   useEffect(() =>  {
 
-//    const baseUrl = 'http://localhost:3000/';
-    const baseUrl = 'https://api.tomwood2.com/';
-    const email = user.email;
-    const url = `${baseUrl}monitor/site/userWatches/${email}`;
-
     const fetchData = async () => {
 
-      setLoading(true);
+      // setLoading(true);
 
       try {
+
+        const url = `${baseUrl}monitor/user/watches/choreographers/${userId}`;
+
         const result = await axios.get(url);
-        setData(result.data);
+
+        setChoreographers(result.data);
+        setIsModified(false);
       } catch (error) {
         console.error(error.message);
       }
 
-      setLoading(false);
+      // setLoading(false);
     }
 
-    fetchData();
+    if (userId !== '') {
+      fetchData();
+    }
 
-  }, [user.email]);
-
-
-  const updateMessage = (event) => {
-    setMessage(event.target.value);
-  };
-
-  const onAddItem = () => {
-    setItems((items) => {
-      items.push(message);
-      return items;
-    })
-  };
+  }, [userId, fetch]);
 
   const handleCloseSearch = () => {
     setShowSearch(false);
@@ -68,18 +88,69 @@ const MyWatchesPage = () => {
     setEditMode(true);
   };
 
+  const handleCancel = () => {
+    handleUnsetEditMode();
+    setFetch((fetch) => ++fetch);
+  }
+
+  const handleSave = () => {
+
+    // post watches
+
+    const postData = async () => {
+
+      const baseUrl = 'https://api.tomwood2.com/';
+      const url = `${baseUrl}monitor/user/watches/choreographers/${userId}`;
+
+      try {
+        const result = await axios.post(url, choreographers);
+
+        handleUnsetEditMode();
+        setFetch((fetch) => ++fetch);
+
+      } catch (error) {
+        console.error(error.message);
+      }
+
+   }
+
+    postData();
+  }
+
   const handleUnsetEditMode = () => {
     setEditMode(false);
     handleCloseSearch();
   };
 
-  const handleAddWatch = () => {
-    console.log("handleAddWatch");
+  const handleDelete = (event) => {
+    const index =  parseInt(event.target.dataset.index);
+    setChoreographers((choreographers) => {
+      let newChoreographers = choreographers.slice();
+      newChoreographers.splice(index, 1);
+      return newChoreographers;
+    });
+  }
+
+  const handleAddWatch = (choreographer) => {
+
+    const found = choreographers.find(c => c._id === choreographer._id);
+
+    if (found) {
+      return; // ignore if already in the list
+    }
+
+    setChoreographers((choreographers) => {
+      let newChoreographers = choreographers.slice();
+      newChoreographers.push(choreographer);
+      return newChoreographers;
+    });
+
+    setIsModified(true);
   };
 
-  if (loading) {
-    return (<div>Loading</div>)
-  }
+  // if (loading) {
+  //   return (<div>Loading</div>)
+  // }
   
   return (
     <PageLayout>
@@ -96,40 +167,42 @@ const MyWatchesPage = () => {
             <div className="my-watches-grid">
               <div className="profile__header">
                 <img
-                  src={user.picture}
+                  src={auth0User.picture}
                   alt="Profile"
                   className="profile__avatar"
                 />
                 <div className="profile__headline">
-                  <h2 className="profile__title">{user.name}</h2>
-                  <span className="profile__description">{user.email}</span>
+                  <h2 className="profile__title">{auth0User.name}</h2>
+                  <span className="profile__description">{auth0User.email}</span>
                 </div>
               </div>
               <div className="my-watches-list">
 
-              {data.userSites.map((userSite) => {
+              {choreographers.map((choreographer, index) => {
                 return (
-                  <>
+                  <div key={choreographer._id} className='my-watches-list-row'>
+
                     {editMode &&
                       <div className='my-watches-list-cell'>
-                          <button className='button button--compact button--secondary my-watches-delete-button' >Delete</button>
+                          <button
+                            className='button button--compact button--secondary my-watches-delete-button'
+                            data-index={index}
+                            onClick={handleDelete}>
+                              Delete
+                          </button>
                       </div>
                     }
 
-                    {/* this is the first column when not it edit mode */}
                     <div className='my-watches-list-cell'>
-                      {userSite.name}
+                      {choreographer.name}
                     </div>
+
+                    {/* this button keeps row height consistent between edit and non-edit modes */}
                     <div className='my-watches-list-cell'>
                         <button className='button button--compact button--secondary my-watches-dummy-button' >dummy</button>
                     </div>
-                    
-                    {/* we still want 3 columns when not in edit mode */}
-
-                    {!editMode &&
-                      <div></div>
-                    }
-                  </>
+                 
+                  </div>
                 )
                 })}
               </div>
@@ -140,8 +213,8 @@ const MyWatchesPage = () => {
                 }
                 {editMode &&
                   <>
-                    <button className='button button--primary button--compact' onClick={handleUnsetEditMode}>Save</button>
-                    <button className='button button--primary button--compact' onClick={handleUnsetEditMode}>Cancel</button>
+                    <button className='button button--primary button--compact' onClick={handleSave}>Save</button>
+                    <button className='button button--primary button--compact' onClick={handleCancel}>Cancel</button>
                     {!showSearch &&
                       <button className='button button--primary button--compact' onClick={handleShowSearch}>Add</button>
                     }
@@ -167,65 +240,3 @@ const ProtectedMyWatchesPage = withAuthenticationRequired(MyWatchesPage, {
 });
 
 export {ProtectedMyWatchesPage};
-
-/*
-      <div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {renderRows()}
-        </tbody>
-      </table>
-      <hr/>
-      <input type="text" onChange={updateMessage}/>
-      <button onClick={onAddItem}>
-        Add Item
-      </button>
-      </div>
-
-*/
-
-
-/*
-      <div className="content-layout">
-        <h1 id="page-title" className="content__title">
-          My Watches
-        </h1>
-        <div className="content__body">
-          <p id="page-description">
-          <span>
-              Below is the list of choreogrphers that you are watching for new line dances.
-            </span>
-            </p>
-            <div className="profile-grid">
-              <div className="profile__header">
-                <img
-                  src={user.picture}
-                  alt="Profile"
-                  className="profile__avatar"
-                />
-                <div className="profile__headline">
-                  <h2 className="profile__title">{user.name}</h2>
-                  <span className="profile__description">{user.email}</span>
-                </div>
-              </div>
-              <div className="profile__details">
-              <ul>
-                {data.userSites.map((site, index) => {
-                return (
-                  <li key={index}>{site.name}</li>
-                )
-            })}
-          </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-  */
-

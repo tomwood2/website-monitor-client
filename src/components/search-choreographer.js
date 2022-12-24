@@ -47,6 +47,15 @@ const SearchChoreographer = ({handleClose, handleAdd}) => {
         setSearchValue(event.target.value);
     }
 
+    const onClickAdd = (event) => {
+
+        // we added a user defined attribute (data-index) to the add button
+        // to hold the index of the displayed result
+        const index =  parseInt(event.target.dataset.index);
+        const choreographer = searchResult.matches[index];
+        handleAdd(choreographer);
+    }
+
     // if (loading) {
     //     return (<div>Loading</div>)
     // }
@@ -75,23 +84,22 @@ const SearchChoreographer = ({handleClose, handleAdd}) => {
                     />
                 </div>
 
-                <div className='search-choreographers-results-container'>
+                <div className='search-choreographers-results-list'>
                     { searchResult && 
-                        searchResult.matches.map((choreographer) => {
+                        searchResult.matches.map((choreographer, index) => {
                         return (
-                            <>
-                            <div>
+                            <div className='search-choreographers-results-list-row'
+                                key={choreographer._id}>
                                 <button
                                     className='button button--compact button--secondary search-choreographers-results-add-button'
-                                    onClick={handleAdd}
-                                    >
-                                        Add
-                                    </button>
+                                    onClick={onClickAdd}
+                                    data-index={index}>
+                                    Add
+                                </button>
+                            <div className="search-choreographers-results-list-cell">
+                                {`${choreographer.name}`}
                             </div>
-                            <div>
-                                {`${choreographer.lastName}, ${choreographer.firstName}`}
                             </div>
-                            </>
                         )
                     })}
                 </div>
