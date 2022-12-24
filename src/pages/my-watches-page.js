@@ -140,8 +140,33 @@ useEffect(() => {
     }
 
     setChoreographers((choreographers) => {
+      // make a new array so set state triggers render
       let newChoreographers = choreographers.slice();
       newChoreographers.push(choreographer);
+
+      newChoreographers.sort((a, b) => {
+
+        if (a.lastName < b.lastName) {
+          return -1;
+        }
+
+        if (a.lastName === b.lastName) {
+          // same last names
+
+          if (a.firstName < b.firstName) {
+            return -1;
+          }
+
+          if (a.firstName === b.firstName) {
+            return 0;
+          }
+
+          return 1; // a.firstName > b.firstName
+        }
+
+        return 1; // a.lastName > b.lastName
+      });
+
       return newChoreographers;
     });
 
