@@ -18,8 +18,8 @@ const MyWatchesPage = () => {
   const [isModified, setIsModified] = useState(false);
   const [fetch, setFetch] = useState(0);
 
-  const [showSearch, setShowSearch] = useState(true);
-  const [editMode, setEditMode] = useState(true);
+  const [showSearch, setShowSearch] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   // const baseUrl = 'http://localhost:3000/';
   const baseUrl = 'https://api.tomwood2.com/';
