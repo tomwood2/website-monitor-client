@@ -89,7 +89,7 @@ useEffect(() => {
   };
 
   const handleCancel = () => {
-    handleUnsetEditMode();
+    unsetEditMode();
     setFetch((fetch) => ++fetch);
   }
 
@@ -105,8 +105,7 @@ useEffect(() => {
       try {
         const result = await axios.post(url, choreographers);
 
-        handleUnsetEditMode();
-        setFetch((fetch) => ++fetch);
+        unsetEditMode();
 
       } catch (error) {
         console.error(error.message);
@@ -117,7 +116,7 @@ useEffect(() => {
     postData();
   }
 
-  const handleUnsetEditMode = () => {
+  const unsetEditMode = () => {
     setEditMode(false);
     handleCloseSearch();
   };
