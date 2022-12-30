@@ -7,7 +7,7 @@ export const MobileNavBarTab = ({ path, label, handleClick }) => {
       to={path}
       onClick={handleClick}
       className="mobile-nav-bar__tab"
-      activeClassName="mobile-nav-bar__tab--active"
+      // activeClassName="mobile-nav-bar__tab--active"
     >
       {label}
     </NavLink>

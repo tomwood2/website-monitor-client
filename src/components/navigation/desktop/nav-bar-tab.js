@@ -6,7 +6,7 @@ export const NavBarTab = ({ path, label }) => {
     <NavLink
       to={path}
       className="nav-bar__tab"
-      activeClassName="nav-bar__tab--active"
+      // activeClassName="nav-bar__tab--active"
     >
       {label}
     </NavLink>
