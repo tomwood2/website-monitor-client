@@ -12,7 +12,6 @@ import { ProtectedProfilePage } from "./pages/profile-page";
 import { PublicPage } from "./pages/public-page";
 import {ProtectedMyWatchesPage} from './pages/my-watches-page';
 
-
 const App = () => {
 
   const navigate = useNavigate();
@@ -26,14 +25,16 @@ const App = () => {
 
     if (!isLoading && !isAuthenticated && error) {
 
-      // TOOD: find a better way to do this
-      // alert(error.message);
+      // we could use a React Context to pass
+      // this data to the LoginDeniedPage but
+      // this is simpler
 
-      // we may be able to make a new page to show the
-      // error and pass the page url to the logoutOptions
-      // also after register the url in auth0
-      const returnTo = process.env.REACT_APP_AUTH0_LOGIN_DENIED_URL;
-      const logoutOptions = {returnTo: returnTo};
+      sessionStorage.setItem('last-error', JSON.stringify(error));
+
+      // log off user to clear auth0 cookies and
+      // show the LoginDenied page
+
+      const logoutOptions = {returnTo: process.env.REACT_APP_AUTH0_LOGIN_DENIED_URL};
       logout(logoutOptions);
     }
   }, [isAuthenticated, isLoading, error]);
