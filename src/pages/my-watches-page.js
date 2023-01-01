@@ -4,14 +4,15 @@ import './my-watches-page.css';
 import {useState, useEffect} from 'react';
 import axios from 'axios';
 import { useAuth0 } from '@auth0/auth0-react';
+
 import { PageLayout } from '../components/page-layout';
 import { PageLoader } from "../components/page-loader";
 import { SearchChoreographer } from '../components/search-choreographer';
 
 
 const MyWatchesPage = () => {
-  const auth0User = useAuth0().user;
-  // const [loading, setLoading] = useState(true);
+
+  const {user: auth0User, getAccessTokenSilently} = useAuth0();
 
   const [userId, setUserId] = useState('');
   const [choreographers, setChoreographers] = useState([]);
@@ -30,10 +31,18 @@ useEffect(() => {
 
       try {
 
+        const token = await getAccessTokenSilently({
+          audience: 'api.tomwood2.com', // Value in Identifier field for the API being called.
+        });
+
         // const email = auth0User.email;
         const url = `${baseUrl}monitor/user/email/${auth0User.email}`;
 
-        const result = await axios.get(url);
+        const result = await axios.get(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        });
         const user = result.data;
 
         setUserId(user._id);
@@ -46,7 +55,7 @@ useEffect(() => {
       fetchUser();
     }
 
-  }, [auth0User]);
+  }, [auth0User, getAccessTokenSilently]);
 
 
   useEffect(() =>  {
@@ -59,7 +68,15 @@ useEffect(() => {
 
         const url = `${baseUrl}monitor/user/watches/choreographers/${userId}`;
 
-        const result = await axios.get(url);
+        const token = await getAccessTokenSilently({
+          audience: 'api.tomwood2.com', // Value in Identifier field for the API being called.
+        });
+
+        const result = await axios.get(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        });
 
         setChoreographers(result.data);
         setIsModified(false);
@@ -74,7 +91,7 @@ useEffect(() => {
       fetchData();
     }
 
-  }, [userId, fetch]);
+  }, [userId, fetch, getAccessTokenSilently]);
 
   const handleCloseSearch = () => {
     setShowSearch(false);
@@ -103,7 +120,14 @@ useEffect(() => {
       const url = `${baseUrl}monitor/user/watches/choreographers/${userId}`;
 
       try {
-        const result = await axios.post(url, choreographers);
+        const token = await getAccessTokenSilently({
+          audience: 'api.tomwood2.com', // Value in Identifier field for the API being called.
+        });
+        const result = await axios.post(url, choreographers, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        });
 
         unsetEditMode();
 

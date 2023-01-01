@@ -1,15 +1,10 @@
 import React from "react";
 import axios from 'axios';
 import {useState, useEffect} from 'react';
-
-// export const SearchChoreographer = () => {
-
-//   return (
-//     <div>Choreogrpher search</div>
-//   );
-// };
+import { useAuth0 } from '@auth0/auth0-react';
 
 const SearchChoreographer = ({handleClose, handleAdd}) => {
+    const {getAccessTokenSilently} = useAuth0();
 
     const [loading, setLoading] = useState(false);
     const [searchValue, setSearchValue] = useState('');
@@ -30,7 +25,15 @@ const SearchChoreographer = ({handleClose, handleAdd}) => {
             setLoading(true);
     
             try {
-                const response = await axios.get(url);
+                const token = await getAccessTokenSilently({
+                    audience: 'api.tomwood2.com', // Value in Identifier field for the API being called.
+                });
+          
+                const response = await axios.get(url, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                    }
+                });
                 setSearchResult(response.data);
             } catch (error) {
                 console.error(error.message);
@@ -41,7 +44,7 @@ const SearchChoreographer = ({handleClose, handleAdd}) => {
     
         fetchData();
     
-    }, [searchValue]);
+    }, [searchValue, getAccessTokenSilently]);
 
     const onSearchValueChange = (event) => {
         setSearchValue(event.target.value);
