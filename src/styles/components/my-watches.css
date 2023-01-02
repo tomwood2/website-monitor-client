@@ -12,6 +12,10 @@
   margin-top: 3rem;
 }
 
+.my-watches-no-list {
+  color: var(--white);
+}
+
 .my-watches-list {
   margin-top: 2rem;
   display: flex;

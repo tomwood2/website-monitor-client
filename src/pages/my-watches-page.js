@@ -13,8 +13,7 @@ import { SearchChoreographer } from '../components/search-choreographer';
 const MyWatchesPage = () => {
 
   const {user: auth0User, getAccessTokenSilently} = useAuth0();
-
-  const [userId, setUserId] = useState('');
+  const userId = auth0User['https://tomwood2.com/_id']; // funky property name
   const [choreographers, setChoreographers] = useState([]);
   const [isModified, setIsModified] = useState(false);
   const [fetch, setFetch] = useState(0);
@@ -25,42 +24,8 @@ const MyWatchesPage = () => {
   // const baseUrl = 'http://localhost:3000/';
   const baseUrl = 'https://api.tomwood2.com/';
 
-useEffect(() => {
-
-    const fetchUser = async () => {
-
-      try {
-
-        const token = await getAccessTokenSilently({
-          audience: 'api.tomwood2.com', // Value in Identifier field for the API being called.
-        });
-
-        // const email = auth0User.email;
-        const url = `${baseUrl}monitor/user/email/${auth0User.email}`;
-
-        const result = await axios.get(url, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          }
-        });
-        const user = result.data;
-
-        setUserId(user._id);
-      } catch (error) {
-        console.error(error.message);
-      }
-    };
-
-    if (auth0User.email.length > 0) {
-      fetchUser();
-    }
-
-  }, [auth0User, getAccessTokenSilently]);
-
-
   useEffect(() =>  {
-
-    const fetchData = async () => {
+    (async () => {
 
       // setLoading(true);
 
@@ -85,13 +50,8 @@ useEffect(() => {
       }
 
       // setLoading(false);
-    }
-
-    if (userId !== '') {
-      fetchData();
-    }
-
-  }, [userId, fetch, getAccessTokenSilently]);
+    })();
+  }, [fetch, getAccessTokenSilently]);
 
   const handleCloseSearch = () => {
     setShowSearch(false);
@@ -102,7 +62,11 @@ useEffect(() => {
   };
 
   const handleSetEditMode = () => {
+    setFetch((fetch) => ++fetch);
     setEditMode(true);
+    // automatically show the search
+    // screen when choro list is empty
+    setShowSearch(choreographers.length === 0);
   };
 
   const handleCancel = () => {
@@ -111,12 +75,8 @@ useEffect(() => {
   }
 
   const handleSave = () => {
+    (async () => {
 
-    // post watches
-
-    const postData = async () => {
-
-      const baseUrl = 'https://api.tomwood2.com/';
       const url = `${baseUrl}monitor/user/watches/choreographers/${userId}`;
 
       try {
@@ -135,9 +95,7 @@ useEffect(() => {
         console.error(error.message);
       }
 
-   }
-
-    postData();
+   })();
   }
 
   const unsetEditMode = () => {
@@ -224,36 +182,43 @@ useEffect(() => {
                   <span className="profile__description">{auth0User.email}</span>
                 </div>
               </div>
-              <div className="my-watches-list">
 
-              {choreographers.map((choreographer, index) => {
-                return (
-                  <div key={choreographer._id} className='my-watches-list-row'>
+              {!editMode && choreographers.length === 0 && 
+                <h3 className='my-watches-no-list'>You have no choreographer watches configured.</h3>
+              }
 
-                    {editMode &&
+              {choreographers.length > 0 &&
+                <div className="my-watches-list">
+
+                {choreographers.map((choreographer, index) => {
+                  return (
+                    <div key={choreographer._id} className='my-watches-list-row'>
+
+                      {editMode &&
+                        <div className='my-watches-list-cell'>
+                            <button
+                              className='button button--compact button--secondary my-watches-delete-button'
+                              data-index={index}
+                              onClick={handleDelete}>
+                                Delete
+                            </button>
+                        </div>
+                      }
+
                       <div className='my-watches-list-cell'>
-                          <button
-                            className='button button--compact button--secondary my-watches-delete-button'
-                            data-index={index}
-                            onClick={handleDelete}>
-                              Delete
-                          </button>
+                        {choreographer.name}
                       </div>
-                    }
 
-                    <div className='my-watches-list-cell'>
-                      {choreographer.name}
+                      {/* this button keeps row height consistent between edit and non-edit modes */}
+                      <div className='my-watches-list-cell'>
+                          <button className='button button--compact button--secondary my-watches-dummy-button' >dummy</button>
+                      </div>
+                  
                     </div>
-
-                    {/* this button keeps row height consistent between edit and non-edit modes */}
-                    <div className='my-watches-list-cell'>
-                        <button className='button button--compact button--secondary my-watches-dummy-button' >dummy</button>
-                    </div>
-                 
-                  </div>
-                )
-                })}
-              </div>
+                  )
+                  })}
+                </div>
+              }
 
               <div className='my-watches-button-bar'>
                 {!editMode &&
