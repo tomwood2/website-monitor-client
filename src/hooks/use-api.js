@@ -10,8 +10,8 @@ export const useApi = (url, options = {}) => {
   const [state, setState] = useState({
     error: null,
     isLoading: true,
-    data: null,
   });
+  const [data, setData] = useState(null);   // only used to trigger render
   const [refreshIndex, setRefreshIndex] = useState(0);
 
   useEffect(() => {
@@ -28,9 +28,9 @@ export const useApi = (url, options = {}) => {
             Authorization: `Bearer ${accessToken}`,
           },
         });
+        setData(result.data);
         setState({
           ...state,
-          data: result.data,
           error: null,
           isLoading: false,
         });
@@ -46,6 +46,30 @@ export const useApi = (url, options = {}) => {
 
   return {
     ...state,
+    data,
+    setData,    // so we can use like state in caller
     refresh: () => setRefreshIndex(refreshIndex + 1),
   };
+};
+
+export const UseApiShowError = ({error, getTokenAndTryAgain}) => {
+
+  if (error?.error === 'consent_required') {
+    return (
+      <div className='my-watches-error-panel'>
+        <h2 className="content__title">You must authorize this application to continue.</h2>
+        <button className='button button--primary button--compact' onClick={getTokenAndTryAgain}>View Authorization Form</button>
+      </div>
+      );
+  }
+
+  if (error?.error) {
+    return (
+      <div className='my-watches-error-panel'>
+        <h2 className="content__title">Oops {error.message}!</h2>
+      </div>
+    );
+  }
+
+  return (<div></div>);
 };

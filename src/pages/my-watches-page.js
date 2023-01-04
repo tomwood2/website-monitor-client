@@ -4,19 +4,17 @@ import './my-watches-page.css';
 import {useState, useEffect} from 'react';
 import axios from 'axios';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useApi, UseApiShowError } from '../hooks/use-api';
 
 import { PageLayout } from '../components/page-layout';
 import { PageLoader } from "../components/page-loader";
 import { SearchChoreographer } from '../components/search-choreographer';
 
-
 const MyWatchesPage = () => {
-
+  const { login, getAccessTokenWithPopup } = useAuth0();
   const {user: auth0User, getAccessTokenSilently} = useAuth0();
   const userId = auth0User['https://tomwood2.com/_id']; // funky property name
-  const [choreographers, setChoreographers] = useState([]);
   const [isModified, setIsModified] = useState(false);
-  const [fetch, setFetch] = useState(0);
 
   const [showSearch, setShowSearch] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -24,34 +22,18 @@ const MyWatchesPage = () => {
   // const baseUrl = 'http://localhost:3000/';
   const baseUrl = 'https://api.tomwood2.com/';
 
-  useEffect(() =>  {
-    (async () => {
+  const options = {
+    audience: 'api.tomwood2.com',
+    scope: undefined,  
+  }
 
-      // setLoading(true);
+  const {isLoading, error, data: choreographers, setData: setChoreographers, refresh: refreshChoreographers } =
+    useApi(`${baseUrl}monitor/user/watches/choreographers/${userId}`, options);
 
-      try {
-
-        const url = `${baseUrl}monitor/user/watches/choreographers/${userId}`;
-
-        const token = await getAccessTokenSilently({
-          audience: 'api.tomwood2.com', // Value in Identifier field for the API being called.
-        });
-
-        const result = await axios.get(url, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          }
-        });
-
-        setChoreographers(result.data);
-        setIsModified(false);
-      } catch (error) {
-        console.error(error.message);
-      }
-
-      // setLoading(false);
-    })();
-  }, [fetch, getAccessTokenSilently]);
+  const getTokenAndTryAgain = async () => {
+    await getAccessTokenWithPopup(options);
+    refreshChoreographers();
+  };
 
   const handleCloseSearch = () => {
     setShowSearch(false);
@@ -62,7 +44,7 @@ const MyWatchesPage = () => {
   };
 
   const handleSetEditMode = () => {
-    setFetch((fetch) => ++fetch);
+    refreshChoreographers();
     setEditMode(true);
     // automatically show the search
     // screen when choro list is empty
@@ -71,7 +53,7 @@ const MyWatchesPage = () => {
 
   const handleCancel = () => {
     unsetEditMode();
-    setFetch((fetch) => ++fetch);
+    refreshChoreographers();
   }
 
   const handleSave = () => {
@@ -154,10 +136,6 @@ const MyWatchesPage = () => {
     setIsModified(true);
   };
 
-  // if (loading) {
-  //   return (<div>Loading</div>)
-  // }
-  
   return (
     <PageLayout>
       <div className="content-layout">
@@ -165,11 +143,6 @@ const MyWatchesPage = () => {
           My Watches
         </h1>
         <div className="content__body">
-          {/* <p id="page-description">
-          <span>
-              Below is the list of choreogrphers that you are watching for new line dances.
-          </span>
-          </p> */}
             <div className="my-watches-grid">
               <div className="profile__header">
                 <img
@@ -183,62 +156,75 @@ const MyWatchesPage = () => {
                 </div>
               </div>
 
-              {!editMode && choreographers.length === 0 && 
-                <h3 className='my-watches-no-list'>You have no choreographer watches configured.</h3>
-              }
+                {isLoading &&
+                  <div className="page-layout">
+                    <PageLoader />
+                  </div>
+                }
 
-              {choreographers.length > 0 &&
-                <div className="my-watches-list">
+                {error &&
+                  <UseApiShowError error={error} getTokenAndTryAgain={getTokenAndTryAgain} />
+                }
 
-                {choreographers.map((choreographer, index) => {
-                  return (
-                    <div key={choreographer._id} className='my-watches-list-row'>
+              {!isLoading && !error &&
+                <div>
+                  {!editMode && choreographers.length === 0 && 
+                    <h3 className='my-watches-no-list'>You have no choreographer watches configured.</h3>
+                  }
 
-                      {editMode &&
-                        <div className='my-watches-list-cell'>
-                            <button
-                              className='button button--compact button--secondary my-watches-delete-button'
-                              data-index={index}
-                              onClick={handleDelete}>
-                                Delete
-                            </button>
+                  {choreographers.length > 0 &&
+                    <div className="my-watches-list">
+
+                    {choreographers.map((choreographer, index) => {
+                      return (
+                        <div key={choreographer._id} className='my-watches-list-row'>
+
+                          {editMode &&
+                            <div className='my-watches-list-cell'>
+                                <button
+                                  className='button button--compact button--secondary my-watches-delete-button'
+                                  data-index={index}
+                                  onClick={handleDelete}>
+                                    Delete
+                                </button>
+                            </div>
+                          }
+
+                          <div className='my-watches-list-cell'>
+                            {choreographer.name}
+                          </div>
+
+                          {/* this button keeps row height consistent between edit and non-edit modes */}
+                          <div className='my-watches-list-cell'>
+                              <button className='button button--compact button--secondary my-watches-dummy-button' >dummy</button>
+                          </div>
+                      
                         </div>
-                      }
-
-                      <div className='my-watches-list-cell'>
-                        {choreographer.name}
-                      </div>
-
-                      {/* this button keeps row height consistent between edit and non-edit modes */}
-                      <div className='my-watches-list-cell'>
-                          <button className='button button--compact button--secondary my-watches-dummy-button' >dummy</button>
-                      </div>
-                  
+                      )
+                      })}
                     </div>
-                  )
-                  })}
+                  }
+
+                  <div className='my-watches-button-bar'>
+                    {!editMode &&
+                      <button className='button button--primary button--compact' onClick={handleSetEditMode}>Edit</button>
+                    }
+                    {editMode &&
+                      <>
+                        <button className='button button--primary button--compact' onClick={handleSave}>Save</button>
+                        <button className='button button--primary button--compact' onClick={handleCancel}>Cancel</button>
+                        {!showSearch &&
+                          <button className='button button--primary button--compact' onClick={handleShowSearch}>Add</button>
+                        }
+                      </>
+                    }
+                  </div>
+
+                  {showSearch && 
+                    <SearchChoreographer handleClose={handleCloseSearch} handleAdd={handleAddWatch} />
+                  }
                 </div>
               }
-
-              <div className='my-watches-button-bar'>
-                {!editMode &&
-                  <button className='button button--primary button--compact' onClick={handleSetEditMode}>Edit</button>
-                }
-                {editMode &&
-                  <>
-                    <button className='button button--primary button--compact' onClick={handleSave}>Save</button>
-                    <button className='button button--primary button--compact' onClick={handleCancel}>Cancel</button>
-                    {!showSearch &&
-                      <button className='button button--primary button--compact' onClick={handleShowSearch}>Add</button>
-                    }
-                  </>
-                }
-              </div>
-
-                {showSearch && 
-                  <SearchChoreographer handleClose={handleCloseSearch} handleAdd={handleAddWatch} />
-                }
-
             </div>
           </div>
         </div>
