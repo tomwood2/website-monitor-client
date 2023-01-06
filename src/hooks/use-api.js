@@ -1,20 +1,37 @@
 // from https://github.com/auth0/auth0-react/blob/master/EXAMPLES.md#create-a-useapi-hook-for-accessing-protected-apis-with-an-access-token
 // only use on protected pages - pages that can only be seen by logged in users
 // changes from original : use axios instead of fetch so no await on result.data, loading now isLoading
-import { useEffect, useState } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+// added callApiOnFirstRender to make it more flexible
+
+import {useEffect, useState} from 'react';
+import {useAuth0} from '@auth0/auth0-react';
 import axios from 'axios';
 
-export const useApi = (url, options = {}) => {
-  const { getAccessTokenSilently } = useAuth0();
+export const useApi = (url, options = {}, callApiOnFirstRender = true) => {
+  const {getAccessTokenSilently} = useAuth0();
   const [state, setState] = useState({
     error: null,
-    isLoading: true,
+    isLoading: callApiOnFirstRender ? true : false,
   });
-  const [data, setData] = useState(null);   // only used to trigger render
+  const [data, setData] = useState(null);
+  // only used to trigger render
   const [refreshIndex, setRefreshIndex] = useState(0);
 
   useEffect(() => {
+    // only call api in response to refreshIndex
+    // call (skip api on first render)
+    // if callApiOnFirstRender is true
+    // set to false when only want call api in
+    // response to user input only for example.
+    if (!callApiOnFirstRender && refreshIndex === 0) {
+      return;
+    }
+
+    setState({
+      ...state,
+      isLoading: true,
+    });
+
     (async () => {
       try {
         const { audience, scope, ...fetchOptions } = options;
@@ -28,12 +45,14 @@ export const useApi = (url, options = {}) => {
             Authorization: `Bearer ${accessToken}`,
           },
         });
+
         setData(result.data);
         setState({
           ...state,
           error: null,
           isLoading: false,
         });
+
       } catch (error) {
         setState({
           ...state,

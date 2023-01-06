@@ -11,24 +11,61 @@ import { PageLoader } from "../components/page-loader";
 import { SearchChoreographer } from '../components/search-choreographer';
 
 const MyWatchesPage = () => {
-  const { login, getAccessTokenWithPopup } = useAuth0();
+
+  ///////////////////
+  // constants
+
+  const baseUrl = 'https://api.tomwood2.com/';
+  const options = {
+    audience: 'api.tomwood2.com',
+    scope: undefined,  
+  }
+
+  ///////////////////
+  // begin hooks
+
+  const {getAccessTokenWithPopup } = useAuth0();
   const {user: auth0User, getAccessTokenSilently} = useAuth0();
   const userId = auth0User['https://tomwood2.com/_id']; // funky property name
   const [isModified, setIsModified] = useState(false);
 
   const [showSearch, setShowSearch] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [choreographers, setChoreographers] = useState(null);
 
-  // const baseUrl = 'http://localhost:3000/';
-  const baseUrl = 'https://api.tomwood2.com/';
-
-  const options = {
-    audience: 'api.tomwood2.com',
-    scope: undefined,  
-  }
-
-  const {isLoading, error, data: choreographers, setData: setChoreographers, refresh: refreshChoreographers } =
+  // read choreographers from protected api
+  const {isLoading, error, data, setData, refresh: refreshChoreographers } =
     useApi(`${baseUrl}monitor/user/watches/choreographers/${userId}`, options);
+
+  // set our choreographers state whenever we read them from the api
+  useEffect(() => {
+    setChoreographers(data === null ? null : [...data]);
+  }, [data]);
+
+  // set our modified flag when downloading choregraphers (data)
+  // or when add/delete local choreographer list (choreographers)
+  useEffect(() => {
+      if (data === null && choreographers === null) {
+        setIsModified(false); 
+      } else if (data === null || choreographers === null) {
+        setIsModified(true); 
+      } else if (data.length !== choreographers.length) {
+        setIsModified(true); 
+      } else {
+        setIsModified(false); 
+        for (let i = 0; i < choreographers.length; i++) {
+          const choreographer = choreographers[i];
+
+          if (choreographer._id !== data[i]._id) {
+            setIsModified(true); 
+            break;
+          }
+        }
+      }
+  }, [data, choreographers]);
+
+  // end hooks
+  ///////////////////
 
   const getTokenAndTryAgain = async () => {
     await getAccessTokenWithPopup(options);
@@ -72,6 +109,9 @@ const MyWatchesPage = () => {
         });
 
         unsetEditMode();
+        // set data for IsModifed()
+        // to return false;
+        setData(choreographers);
 
       } catch (error) {
         console.error(error.message);
@@ -132,8 +172,6 @@ const MyWatchesPage = () => {
 
       return newChoreographers;
     });
-
-    setIsModified(true);
   };
 
   return (
@@ -168,11 +206,11 @@ const MyWatchesPage = () => {
 
               {!isLoading && !error &&
                 <div>
-                  {!editMode && choreographers.length === 0 && 
+                  {!editMode && choreographers?.length === 0 && 
                     <h3 className='my-watches-no-list'>You have no choreographer watches configured.</h3>
                   }
 
-                  {choreographers.length > 0 &&
+                  {choreographers?.length > 0 &&
                     <div className="my-watches-list">
 
                     {choreographers.map((choreographer, index) => {
@@ -211,7 +249,9 @@ const MyWatchesPage = () => {
                     }
                     {editMode &&
                       <>
-                        <button className='button button--primary button--compact' onClick={handleSave}>Save</button>
+                        {isModified &&
+                          <button className='button button--primary button--compact' onClick={handleSave}>Save</button>
+                        }
                         <button className='button button--primary button--compact' onClick={handleCancel}>Cancel</button>
                         {!showSearch &&
                           <button className='button button--primary button--compact' onClick={handleShowSearch}>Add</button>
