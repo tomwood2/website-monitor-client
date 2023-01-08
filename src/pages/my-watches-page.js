@@ -2,7 +2,6 @@ import React from 'react';
 import { withAuthenticationRequired } from "@auth0/auth0-react";
 import './my-watches-page.css';
 import {useState, useEffect} from 'react';
-import axios from 'axios';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useApi, UseApiShowError } from '../hooks/use-api';
 
@@ -16,60 +15,95 @@ const MyWatchesPage = () => {
   // constants
 
   const baseUrl = 'https://api.tomwood2.com/';
-  const options = {
-    audience: 'api.tomwood2.com',
-    scope: undefined,  
-  }
 
   ///////////////////
   // begin hooks
 
-  const {getAccessTokenWithPopup } = useAuth0();
-  const {user: auth0User, getAccessTokenSilently} = useAuth0();
+  const {user: auth0User, getAccessTokenWithPopup } = useAuth0();
   const userId = auth0User['https://tomwood2.com/_id']; // funky property name
   const [isModified, setIsModified] = useState(false);
-
   const [showSearch, setShowSearch] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [choreographers, setChoreographers] = useState(null);
+  const [apiChoreographers, setApiChoreographers] = useState([]);
+  const [choreographers, setChoreographers] = useState([]);
+  const [, setPostChoreographersResult] = useState(null);
 
-  // read choreographers from protected api
-  const {isLoading, error, data, setData, refresh: refreshChoreographers } =
-    useApi(`${baseUrl}monitor/user/watches/choreographers/${userId}`, options);
+  const getWatchesConfig = {
+    audience: 'api.tomwood2.com',
+    scope: undefined,
+    method: 'get',
+    url: `${baseUrl}monitor/user/watches/choreographers/${userId}`,  
+  }
 
+  // read choreographers
+  const {isLoading, error, apiSuccessIndex: getSuccessIndex, refresh: getApiChoreographers } =
+    useApi(setApiChoreographers, getWatchesConfig);
+
+  const postChoreogrphersConfig = {
+    audience: 'api.tomwood2.com',
+    scope: undefined,
+    method: 'post',
+    url: `${baseUrl}monitor/user/watches/choreographers/${userId}`,
+    data: choreographers,
+  }
+
+  // post choreographers
+  const {isLoading: isSaving, error: postError, apiSuccessIndex: postChoreographersSuccessIndex, refresh: postChoreographers } =
+    useApi(setPostChoreographersResult, postChoreogrphersConfig, false);
+  
   // set our choreographers state whenever we read them from the api
   useEffect(() => {
-    setChoreographers(data === null ? null : [...data]);
-  }, [data]);
+    setChoreographers([...apiChoreographers]);
+  }, [getSuccessIndex]);
 
   // set our modified flag when downloading choregraphers (data)
   // or when add/delete local choreographer list (choreographers)
   useEffect(() => {
-      if (data === null && choreographers === null) {
-        setIsModified(false); 
-      } else if (data === null || choreographers === null) {
-        setIsModified(true); 
-      } else if (data.length !== choreographers.length) {
+      if (apiChoreographers.length !== choreographers.length) {
         setIsModified(true); 
       } else {
+
         setIsModified(false); 
         for (let i = 0; i < choreographers.length; i++) {
-          const choreographer = choreographers[i];
-
-          if (choreographer._id !== data[i]._id) {
+          if (choreographers[i]._id !== apiChoreographers[i]._id) {
             setIsModified(true); 
             break;
           }
         }
       }
-  }, [data, choreographers]);
+  }, [apiChoreographers, choreographers]);
+
+  // reset edit mode and update current data base
+  // value (choreographers) is post was successful
+
+  useEffect(() => {
+    // skip initial render
+    // if not necessary should set to same value
+    // and no re-render
+    if (postChoreographersSuccessIndex > 0) {
+      setEditMode(false);
+      setShowSearch(false);
+      setApiChoreographers(choreographers);
+    }
+  }, [postChoreographersSuccessIndex]);
+
+  useEffect(() => {
+    // automatically show the search
+    // screen when choreo list is empty
+    setShowSearch(choreographers.length === 0 && editMode);
+  }, [choreographers, editMode]);
 
   // end hooks
   ///////////////////
 
   const getTokenAndTryAgain = async () => {
-    await getAccessTokenWithPopup(options);
-    refreshChoreographers();
+    await getAccessTokenWithPopup(getWatchesConfig);
+    getApiChoreographers();
+  };
+
+  const getPostTokenAndTryAgain = async () => {
+    await getAccessTokenWithPopup(postChoreogrphersConfig);
+    getApiChoreographers();
   };
 
   const handleCloseSearch = () => {
@@ -81,49 +115,19 @@ const MyWatchesPage = () => {
   };
 
   const handleSetEditMode = () => {
-    refreshChoreographers();
+    getApiChoreographers();
     setEditMode(true);
-    // automatically show the search
-    // screen when choro list is empty
-    setShowSearch(choreographers.length === 0);
   };
 
   const handleCancel = () => {
-    unsetEditMode();
-    refreshChoreographers();
+    setEditMode(false);
+    setShowSearch(false);
+    getApiChoreographers();
   }
 
   const handleSave = () => {
-    (async () => {
-
-      const url = `${baseUrl}monitor/user/watches/choreographers/${userId}`;
-
-      try {
-        const token = await getAccessTokenSilently({
-          audience: 'api.tomwood2.com', // Value in Identifier field for the API being called.
-        });
-        const result = await axios.post(url, choreographers, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          }
-        });
-
-        unsetEditMode();
-        // set data for IsModifed()
-        // to return false;
-        setData(choreographers);
-
-      } catch (error) {
-        console.error(error.message);
-      }
-
-   })();
+    postChoreographers();
   }
-
-  const unsetEditMode = () => {
-    setEditMode(false);
-    handleCloseSearch();
-  };
 
   const handleDelete = (event) => {
     const index =  parseInt(event.target.dataset.index);
@@ -138,40 +142,38 @@ const MyWatchesPage = () => {
 
     const found = choreographers.find(c => c._id === choreographer._id);
 
-    if (found) {
-      return; // ignore if already in the list
-    }
+    if (!found) {
+      setChoreographers((choreographers) => {
+        // make a new array so set state triggers render
+        let newChoreographers = choreographers.slice();
+        newChoreographers.push(choreographer);
 
-    setChoreographers((choreographers) => {
-      // make a new array so set state triggers render
-      let newChoreographers = choreographers.slice();
-      newChoreographers.push(choreographer);
+        newChoreographers.sort((a, b) => {
 
-      newChoreographers.sort((a, b) => {
-
-        if (a.lastName < b.lastName) {
-          return -1;
-        }
-
-        if (a.lastName === b.lastName) {
-          // same last names
-
-          if (a.firstName < b.firstName) {
+          if (a.lastName < b.lastName) {
             return -1;
           }
 
-          if (a.firstName === b.firstName) {
-            return 0;
+          if (a.lastName === b.lastName) {
+            // same last names
+
+            if (a.firstName < b.firstName) {
+              return -1;
+            }
+
+            if (a.firstName === b.firstName) {
+              return 0;
+            }
+
+            return 1; // a.firstName > b.firstName
           }
 
-          return 1; // a.firstName > b.firstName
-        }
+          return 1; // a.lastName > b.lastName
+        });
 
-        return 1; // a.lastName > b.lastName
+        return newChoreographers;
       });
-
-      return newChoreographers;
-    });
+    }
   };
 
   return (
@@ -194,7 +196,7 @@ const MyWatchesPage = () => {
                 </div>
               </div>
 
-                {isLoading &&
+                {(isLoading || isSaving) &&
                   <div className="page-layout">
                     <PageLoader />
                   </div>
@@ -204,7 +206,11 @@ const MyWatchesPage = () => {
                   <UseApiShowError error={error} getTokenAndTryAgain={getTokenAndTryAgain} />
                 }
 
-              {!isLoading && !error &&
+                {postError &&
+                  <UseApiShowError error={postError} getTokenAndTryAgain={getPostTokenAndTryAgain} />
+                }
+
+                {!isLoading && !isSaving && !error && !postError &&
                 <div>
                   {!editMode && choreographers?.length === 0 && 
                     <h3 className='my-watches-no-list'>You have no choreographer watches configured.</h3>
@@ -270,7 +276,6 @@ const MyWatchesPage = () => {
         </div>
     </PageLayout>
   );
-
 };
 
 const ProtectedMyWatchesPage = withAuthenticationRequired(MyWatchesPage, {

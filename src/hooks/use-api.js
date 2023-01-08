@@ -3,19 +3,22 @@
 // changes from original : use axios instead of fetch so no await on result.data, loading now isLoading
 // added callApiOnFirstRender to make it more flexible
 
+// pass setData as arg
+
 import {useEffect, useState} from 'react';
 import {useAuth0} from '@auth0/auth0-react';
 import axios from 'axios';
 
-export const useApi = (url, options = {}, callApiOnFirstRender = true) => {
+export const useApi = (setData, config = {}, callApiOnFirstRender = true) => {
   const {getAccessTokenSilently} = useAuth0();
   const [state, setState] = useState({
     error: null,
     isLoading: callApiOnFirstRender ? true : false,
   });
-  const [data, setData] = useState(null);
   // only used to trigger render
   const [refreshIndex, setRefreshIndex] = useState(0);
+  // only used to allow caller to run effect every time api call succeeds
+  const [apiSuccessIndex, setApiSuccessIndex] = useState(0);
 
   useEffect(() => {
     // only call api in response to refreshIndex
@@ -34,18 +37,19 @@ export const useApi = (url, options = {}, callApiOnFirstRender = true) => {
 
     (async () => {
       try {
-        const { audience, scope, ...fetchOptions } = options;
+        const { audience, scope, ...configOptions } = config;
         const accessToken = await getAccessTokenSilently({ audience, scope });
 
-        const result = await axios.get(url, {
-          ...fetchOptions,
+        const result = await axios({
+          ...configOptions,
           headers: {
-            ...fetchOptions.headers,
+            ...configOptions.headers,
             // Add the Authorization header to the existing headers
             Authorization: `Bearer ${accessToken}`,
           },
         });
 
+        setApiSuccessIndex(oldIndex => ++oldIndex);
         setData(result.data);
         setState({
           ...state,
@@ -65,8 +69,9 @@ export const useApi = (url, options = {}, callApiOnFirstRender = true) => {
 
   return {
     ...state,
-    data,
-    setData,    // so we can use like state in caller
+    // data,
+    // setData,    // so we can use like state in caller
+    apiSuccessIndex,
     refresh: () => setRefreshIndex(refreshIndex + 1),
   };
 };

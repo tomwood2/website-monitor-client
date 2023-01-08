@@ -10,21 +10,28 @@ const SearchChoreographer = ({handleClose, handleAdd}) => {
     // constants
 
     const baseUrl = 'https://api.tomwood2.com/';
-    const options = {
-        audience: 'api.tomwood2.com',
-        scope: undefined,  
-    }
 
     ///////////////////
     // begin hooks
 
     const {getAccessTokenWithPopup} = useAuth0();
     const [searchValue, setSearchValue] = useState('');
+    const [searchResult, setSearchResult] = useState(null)
+
+    const config = {
+        audience: 'api.tomwood2.com',
+        scope: undefined,  
+        method: 'get',
+        url: `${baseUrl}monitor/site/searchChoreographers/${searchValue}`,  
+    }
 
     // read choreographers from protected api only when we call refreshSearchResult
-    const {isLoading, error, data: searchResult, setData: setSearchResult, refresh: refreshSearchResult } =
-        useApi(`${baseUrl}monitor/site/searchChoreographers/${searchValue}`, options, false);
+    const {isLoading, error, refresh: refreshSearchResult } =
+        useApi(setSearchResult, config, false);
 
+    // if we include setSearchResult and refreshSearchResult
+    // in the change array we get calls to the effect on every
+    // render
     useEffect(() => {
         if (searchValue === '') {
             setSearchResult(null);
@@ -37,7 +44,7 @@ const SearchChoreographer = ({handleClose, handleAdd}) => {
     ///////////////////
     
     const getTokenAndTryAgain = async () => {
-        await getAccessTokenWithPopup(options);
+        await getAccessTokenWithPopup(config);
         refreshSearchResult();
     };
     
@@ -90,7 +97,7 @@ const SearchChoreographer = ({handleClose, handleAdd}) => {
                         <UseApiShowError error={error} getTokenAndTryAgain={getTokenAndTryAgain} />
                         }
 
-                        {!isLoading && !error && searchResult && 
+                        {!isLoading && !error && searchResult &&
                             searchResult.matches.map((choreographer, index) => {
                             return (
                                 <div className='search-choreographers-results-list-row'
