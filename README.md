@@ -12,4 +12,10 @@
 - X fix api call from auth0 during login to use security
 - X use hook for post api call
 - multi-column search results
-- don't close search dialog after adding
+- X don't close search dialog after adding
+- X no wait image
+- X dont change row spacing edit/non-edit modes
+- index value on save, cancel, add buttons
+- X briefly see edit buttons then blanks screen when switching from read to edit mode
+- set focus to search when add pressed - add used to show search and add used to add choreographer
+- remove choreographers from search list that are already being watched

@@ -1,13 +1,13 @@
 import React from 'react';
-import { withAuthenticationRequired } from "@auth0/auth0-react";
+import {withAuthenticationRequired} from "@auth0/auth0-react";
 import './my-watches-page.css';
 import {useState, useEffect} from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
-import { useApi, UseApiShowError } from '../hooks/use-api';
-
-import { PageLayout } from '../components/page-layout';
-import { PageLoader } from "../components/page-loader";
-import { SearchChoreographer } from '../components/search-choreographer';
+import {useAuth0} from '@auth0/auth0-react';
+import {useApi, UseApiShowError} from '../hooks/use-api';
+import {usePrevious} from '../hooks/use-previous';
+import {PageLayout} from '../components/page-layout';
+import {PageLoader} from "../components/page-loader";
+import {SearchChoreographer} from '../components/search-choreographer';
 
 const MyWatchesPage = () => {
 
@@ -27,7 +27,9 @@ const MyWatchesPage = () => {
   const [apiChoreographers, setApiChoreographers] = useState([]);
   const [choreographers, setChoreographers] = useState([]);
   const [, setPostChoreographersResult] = useState(null);
+  const [pendingEditMode, setPendingEditMode] = useState(false);
 
+  
   const getWatchesConfig = {
     audience: 'api.tomwood2.com',
     scope: undefined,
@@ -50,11 +52,21 @@ const MyWatchesPage = () => {
   // post choreographers
   const {isLoading: isSaving, error: postError, apiSuccessIndex: postChoreographersSuccessIndex, refresh: postChoreographers } =
     useApi(setPostChoreographersResult, postChoreogrphersConfig, false);
+
+  ///////////////////////////////////////////////////////////////////
+  // previouse states - after all useState calls (some inside useApi)
+
+  const previousGetSuccessIndex = usePrevious(getSuccessIndex);
+  const previousPostChoreographersSuccessIndex = usePrevious(postChoreographersSuccessIndex);
+  const previousEditMode = usePrevious(editMode);
   
   // set our choreographers state whenever we read them from the api
   useEffect(() => {
-    setChoreographers([...apiChoreographers]);
-  }, [getSuccessIndex]);
+    if (getSuccessIndex !== previousGetSuccessIndex) {
+      setEditMode(pendingEditMode);
+      setChoreographers([...apiChoreographers]);
+    }
+  }, [getSuccessIndex, previousGetSuccessIndex, pendingEditMode, apiChoreographers]);
 
   // set our modified flag when downloading choregraphers (data)
   // or when add/delete local choreographer list (choreographers)
@@ -74,24 +86,35 @@ const MyWatchesPage = () => {
   }, [apiChoreographers, choreographers]);
 
   // reset edit mode and update current data base
-  // value (choreographers) is post was successful
+  // value (setApiChoreographers) if post was successful
 
   useEffect(() => {
-    // skip initial render
-    // if not necessary should set to same value
-    // and no re-render
-    if (postChoreographersSuccessIndex > 0) {
-      setEditMode(false);
-      setShowSearch(false);
-      setApiChoreographers(choreographers);
+
+    if (postChoreographersSuccessIndex !== previousPostChoreographersSuccessIndex) {
+      // skip initial render
+      // if not necessary should set to same value
+      // and no re-render
+      if (postChoreographersSuccessIndex > 0) {
+        setEditMode(pendingEditMode);
+        setApiChoreographers(choreographers);
+      }
     }
-  }, [postChoreographersSuccessIndex]);
+  }, [postChoreographersSuccessIndex, previousPostChoreographersSuccessIndex, pendingEditMode, choreographers]);
 
   useEffect(() => {
-    // automatically show the search
-    // screen when choreo list is empty
-    setShowSearch(choreographers.length === 0 && editMode);
-  }, [choreographers, editMode]);
+
+    // only do this when edit mode changes
+    if (editMode !== previousEditMode) {
+      // automatically show the search
+      // screen when choreo list is empty
+      // but don't hide it if already showing
+      if (editMode) {
+        setShowSearch(choreographers.length === 0);
+      } else {
+        setShowSearch(false);
+      }
+    }
+  }, [editMode, previousEditMode, choreographers]);
 
   // end hooks
   ///////////////////
@@ -115,17 +138,21 @@ const MyWatchesPage = () => {
   };
 
   const handleSetEditMode = () => {
+    // switch to edit mode after
+    // api call completes
+    setPendingEditMode(true);
     getApiChoreographers();
-    setEditMode(true);
   };
 
   const handleCancel = () => {
-    setEditMode(false);
-    setShowSearch(false);
+    // switch to read mode after
+    // api call completes
+    setPendingEditMode(false);
     getApiChoreographers();
   }
 
   const handleSave = () => {
+    setPendingEditMode(false);
     postChoreographers();
   }
 
@@ -210,9 +237,11 @@ const MyWatchesPage = () => {
                   <UseApiShowError error={postError} getTokenAndTryAgain={getPostTokenAndTryAgain} />
                 }
 
-                {!isLoading && !isSaving && !error && !postError &&
+                {!isLoading && !isSaving && !error && !postError && 
                 <div>
-                  {!editMode && choreographers?.length === 0 && 
+                  {/* don't show this until the initial api get completes
+                    so it doesn't appear and then disappear after the get api completes */}
+                  {!editMode && choreographers?.length === 0 && getSuccessIndex !== 0 &&
                     <h3 className='my-watches-no-list'>You have no choreographer watches configured.</h3>
                   }
 
@@ -223,16 +252,14 @@ const MyWatchesPage = () => {
                       return (
                         <div key={choreographer._id} className='my-watches-list-row'>
 
-                          {editMode &&
-                            <div className='my-watches-list-cell'>
-                                <button
-                                  className='button button--compact button--secondary my-watches-delete-button'
-                                  data-index={index}
-                                  onClick={handleDelete}>
-                                    Delete
-                                </button>
-                            </div>
-                          }
+                          <div className='my-watches-list-cell'>
+                              <button 
+                                className={`button button--compact button--secondary my-watches-delete-button ${editMode ? '' : 'my-watches-hidden-button'}`}
+                                data-index={index}
+                                onClick={handleDelete}>
+                                  Delete
+                              </button>
+                          </div>
 
                           <div className='my-watches-list-cell'>
                             {choreographer.name}
@@ -240,7 +267,7 @@ const MyWatchesPage = () => {
 
                           {/* this button keeps row height consistent between edit and non-edit modes */}
                           <div className='my-watches-list-cell'>
-                              <button className='button button--compact button--secondary my-watches-dummy-button' >dummy</button>
+                              <button className='button button--compact button--secondary my-watches-hidden-button' >dummy</button>
                           </div>
                       
                         </div>
@@ -250,7 +277,9 @@ const MyWatchesPage = () => {
                   }
 
                   <div className='my-watches-button-bar'>
-                    {!editMode &&
+                    {/* don't show this until the initial read completes
+                    so it doesn't bounce around the screen during startup */}
+                    {!editMode && getSuccessIndex !== 0 &&
                       <button className='button button--primary button--compact' onClick={handleSetEditMode}>Edit</button>
                     }
                     {editMode &&

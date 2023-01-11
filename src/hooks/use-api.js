@@ -11,10 +11,8 @@ import axios from 'axios';
 
 export const useApi = (setData, config = {}, callApiOnFirstRender = true) => {
   const {getAccessTokenSilently} = useAuth0();
-  const [state, setState] = useState({
-    error: null,
-    isLoading: callApiOnFirstRender ? true : false,
-  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   // only used to trigger render
   const [refreshIndex, setRefreshIndex] = useState(0);
   // only used to allow caller to run effect every time api call succeeds
@@ -30,10 +28,12 @@ export const useApi = (setData, config = {}, callApiOnFirstRender = true) => {
       return;
     }
 
-    setState({
-      ...state,
-      isLoading: true,
-    });
+    // don't indicate we are reading
+    // to the user until we are waiting
+    // more than 500ms
+    const timerId = setTimeout(() => {
+      setIsLoading(true)}
+      , 500);
 
     (async () => {
       try {
@@ -51,26 +51,22 @@ export const useApi = (setData, config = {}, callApiOnFirstRender = true) => {
 
         setApiSuccessIndex(oldIndex => ++oldIndex);
         setData(result.data);
-        setState({
-          ...state,
-          error: null,
-          isLoading: false,
-        });
+
+        clearTimeout(timerId);
+        setIsLoading(false);
+        setError(null);
 
       } catch (error) {
-        setState({
-          ...state,
-          error,
-          isLoading: false,
-        });
+        clearTimeout(timerId);
+        setIsLoading(false);
+        setError(error);
       }
     })();
   }, [refreshIndex]);
 
   return {
-    ...state,
-    // data,
-    // setData,    // so we can use like state in caller
+    isLoading,
+    error,
     apiSuccessIndex,
     refresh: () => setRefreshIndex(refreshIndex + 1),
   };
