@@ -68,53 +68,51 @@ const SearchChoreographer = ({handleClose, handleAdd}) => {
                 <span className="search-choreographers-title">Choreogrpher Search</span>
                 <button className='button__logout' onClick={handleClose}>Close</button>
             </div>
-            <div className="code-snippet__container">
-                <div className="search-choreographers-content">
+            <div className="search-choreographers-content">
 
-                    <div className='search-choreographers-search-controls-container'>
-                        <label className='search-chroeographers-search-label' htmlFor="header-search">
-                            <span>Search For:</span>
-                        </label>
-                        <input
-                            className='search-chroeographers-search-input'
-                            type="text"
-                            id="header-search"
-                            placeholder="partial last name[,partial first name]"
-                            value={searchValue}
-                            onChange={onSearchValueChange}
-                        />
+                <div className='search-choreographers-search-controls-container'>
+                    <label className='search-chroeographers-search-label' htmlFor="header-search">
+                        <span>Search For:</span>
+                    </label>
+                    <input
+                        className='search-chroeographers-search-input'
+                        type="text"
+                        id="header-search"
+                        placeholder="partial last name[,partial first name]"
+                        value={searchValue}
+                        onChange={onSearchValueChange}
+                    />
+                </div>
+
+                <div className='search-choreographers-results-list'>
+
+                    {isLoading &&
+                    <div className="page-layout">
+                        <PageLoader />
                     </div>
+                    }
 
-                    <div className='search-choreographers-results-list'>
+                    {error &&
+                    <UseApiShowError error={error} getTokenAndTryAgain={getTokenAndTryAgain} />
+                    }
 
-                        {isLoading &&
-                        <div className="page-layout">
-                            <PageLoader />
-                        </div>
-                        }
-
-                        {error &&
-                        <UseApiShowError error={error} getTokenAndTryAgain={getTokenAndTryAgain} />
-                        }
-
-                        {!isLoading && !error && searchResult &&
-                            searchResult.matches.map((choreographer, index) => {
-                            return (
-                                <div className='search-choreographers-results-list-row'
-                                    key={choreographer._id}>
-                                    <button
-                                        className='button button--compact button--secondary search-choreographers-results-add-button'
-                                        onClick={onClickAdd}
-                                        data-index={index}>
-                                        Add
-                                    </button>
-                                <div className="search-choreographers-results-list-cell">
-                                    {`${choreographer.name}`}
-                                </div>
-                                </div>
-                            )
-                        })}
-                    </div>
+                    {!isLoading && !error && searchResult &&
+                        searchResult.matches.map((choreographer, index) => {
+                        return (
+                            <div className='search-choreographers-results-list-row'
+                                key={choreographer._id}>
+                                <button
+                                    className='button button--compact button--secondary search-choreographers-results-add-button'
+                                    onClick={onClickAdd}
+                                    data-index={index}>
+                                    Add
+                                </button>
+                            <div className="search-choreographers-results-list-cell">
+                                {`${choreographer.name}`}
+                            </div>
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
         </div>

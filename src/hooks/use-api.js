@@ -8,17 +8,24 @@
 import {useEffect, useState} from 'react';
 import {useAuth0} from '@auth0/auth0-react';
 import axios from 'axios';
+import { usePrevious } from './use-previous';
 
 export const useApi = (setData, config = {}, callApiOnFirstRender = true) => {
+
   const {getAccessTokenSilently} = useAuth0();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  // only used to trigger render
   const [refreshIndex, setRefreshIndex] = useState(0);
-  // only used to allow caller to run effect every time api call succeeds
   const [apiSuccessIndex, setApiSuccessIndex] = useState(0);
 
+  const previousRefreshIndex = usePrevious(refreshIndex);
+
   useEffect(() => {
+
+    if (refreshIndex === previousRefreshIndex) {
+      return;
+    }
+
     // only call api in response to refreshIndex
     // call (skip api on first render)
     // if callApiOnFirstRender is true
@@ -62,7 +69,7 @@ export const useApi = (setData, config = {}, callApiOnFirstRender = true) => {
         setError(error);
       }
     })();
-  }, [refreshIndex]);
+  }, [refreshIndex, callApiOnFirstRender, config, getAccessTokenSilently, previousRefreshIndex, setData]);
 
   return {
     isLoading,

@@ -54,7 +54,7 @@ const MyWatchesPage = () => {
     useApi(setPostChoreographersResult, postChoreogrphersConfig, false);
 
   ///////////////////////////////////////////////////////////////////
-  // previouse states - after all useState calls (some inside useApi)
+  // previous states - after all useState calls (some inside useApi)
 
   const previousGetSuccessIndex = usePrevious(getSuccessIndex);
   const previousPostChoreographersSuccessIndex = usePrevious(postChoreographersSuccessIndex);
@@ -209,100 +209,83 @@ const MyWatchesPage = () => {
         <h1 id="page-title" className="content__title">
           My Watches
         </h1>
-        <div className="content__body">
-            <div className="my-watches-grid">
-              <div className="profile__header">
-                <img
-                  src={auth0User.picture}
-                  alt="Profile"
-                  className="profile__avatar"
-                />
-                <div className="profile__headline">
-                  <h2 className="profile__title">{auth0User.name}</h2>
-                  <span className="profile__description">{auth0User.email}</span>
+        <div className="my-watches-grid">
+
+            {(isLoading || isSaving) &&
+              <div className="page-layout">
+                <PageLoader />
+              </div>
+            }
+
+            {error &&
+              <UseApiShowError error={error} getTokenAndTryAgain={getTokenAndTryAgain} />
+            }
+
+            {postError &&
+              <UseApiShowError error={postError} getTokenAndTryAgain={getPostTokenAndTryAgain} />
+            }
+
+            {!isLoading && !isSaving && !error && !postError && 
+            <>
+              <div className='my-watches'>
+                {/* don't show this until the initial api get completes
+                  so it doesn't appear and then disappear after the get api completes */}
+                {!editMode && choreographers?.length === 0 && getSuccessIndex !== 0 &&
+                  <h3 className='my-watches-no-list'>You have no choreographer watches configured.</h3>
+                }
+
+                {choreographers?.length > 0 &&
+                  <div className="my-watches-list">
+
+                  {choreographers.map((choreographer, index) => {
+                    return (
+                      <div key={choreographer._id} className='my-watches-list-row'>
+
+                        <div className='my-watches-list-cell'>
+                            <button 
+                              className={`button button--compact button--secondary my-watches-delete-button ${editMode ? '' : 'my-watches-hidden-button'}`}
+                              data-index={index}
+                              onClick={handleDelete}>
+                                Delete
+                            </button>
+                        </div>
+
+                        <div className='my-watches-list-cell'>
+                          {choreographer.name}
+                        </div>
+
+                      </div>
+                    )
+                    })}
+                  </div>
+                }
+
+                <div className='my-watches-button-bar'>
+                  {/* don't show this until the initial read completes
+                  so it doesn't bounce around the screen during startup */}
+                  {!editMode && getSuccessIndex !== 0 &&
+                    <button className='button button--primary button--compact' onClick={handleSetEditMode}>Edit</button>
+                  }
+                  {editMode &&
+                    <>
+                      {isModified &&
+                        <button className='button button--primary button--compact' onClick={handleSave}>Save</button>
+                      }
+                      <button className='button button--primary button--compact' onClick={handleCancel}>Cancel</button>
+                      {!showSearch &&
+                        <button className='button button--primary button--compact' onClick={handleShowSearch}>Add</button>
+                      }
+                    </>
+                  }
                 </div>
               </div>
-
-                {(isLoading || isSaving) &&
-                  <div className="page-layout">
-                    <PageLoader />
-                  </div>
-                }
-
-                {error &&
-                  <UseApiShowError error={error} getTokenAndTryAgain={getTokenAndTryAgain} />
-                }
-
-                {postError &&
-                  <UseApiShowError error={postError} getTokenAndTryAgain={getPostTokenAndTryAgain} />
-                }
-
-                {!isLoading && !isSaving && !error && !postError && 
-                <div>
-                  {/* don't show this until the initial api get completes
-                    so it doesn't appear and then disappear after the get api completes */}
-                  {!editMode && choreographers?.length === 0 && getSuccessIndex !== 0 &&
-                    <h3 className='my-watches-no-list'>You have no choreographer watches configured.</h3>
-                  }
-
-                  {choreographers?.length > 0 &&
-                    <div className="my-watches-list">
-
-                    {choreographers.map((choreographer, index) => {
-                      return (
-                        <div key={choreographer._id} className='my-watches-list-row'>
-
-                          <div className='my-watches-list-cell'>
-                              <button 
-                                className={`button button--compact button--secondary my-watches-delete-button ${editMode ? '' : 'my-watches-hidden-button'}`}
-                                data-index={index}
-                                onClick={handleDelete}>
-                                  Delete
-                              </button>
-                          </div>
-
-                          <div className='my-watches-list-cell'>
-                            {choreographer.name}
-                          </div>
-
-                          {/* this button keeps row height consistent between edit and non-edit modes */}
-                          <div className='my-watches-list-cell'>
-                              <button className='button button--compact button--secondary my-watches-hidden-button' >dummy</button>
-                          </div>
-                      
-                        </div>
-                      )
-                      })}
-                    </div>
-                  }
-
-                  <div className='my-watches-button-bar'>
-                    {/* don't show this until the initial read completes
-                    so it doesn't bounce around the screen during startup */}
-                    {!editMode && getSuccessIndex !== 0 &&
-                      <button className='button button--primary button--compact' onClick={handleSetEditMode}>Edit</button>
-                    }
-                    {editMode &&
-                      <>
-                        {isModified &&
-                          <button className='button button--primary button--compact' onClick={handleSave}>Save</button>
-                        }
-                        <button className='button button--primary button--compact' onClick={handleCancel}>Cancel</button>
-                        {!showSearch &&
-                          <button className='button button--primary button--compact' onClick={handleShowSearch}>Add</button>
-                        }
-                      </>
-                    }
-                  </div>
-
-                  {showSearch && 
-                    <SearchChoreographer handleClose={handleCloseSearch} handleAdd={handleAddWatch} />
-                  }
-                </div>
+              {showSearch &&
+                  <SearchChoreographer handleClose={handleCloseSearch} handleAdd={handleAddWatch} />
               }
-            </div>
-          </div>
+            </>
+          }
         </div>
+      </div>
     </PageLayout>
   );
 };

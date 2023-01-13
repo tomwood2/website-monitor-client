@@ -15,10 +15,18 @@
   align-items: center;
 }
 
+.my-watches {
+  width: 45rem;
+}
+
 .my-watches-grid {
   display: flex;
-  flex-direction: column;
-  margin-top: 3rem;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 2rem;
+  font-size: 1.6rem;
+  line-height: 2.4rem;
+  /* margin-top: 3rem; */
 }
 
 .my-watches-no-list {
@@ -61,9 +69,10 @@
 .search-choreographers {
   display: flex;
   flex-direction: column;
-  width: 100%;
+  width: 65rem;
+  /* width: 100%; */
   border-radius: 0.8rem;
-  margin-top: 2rem;
+  /* margin-top: 2rem; */
   overflow: hidden;
 }
 
@@ -89,9 +98,14 @@
 }
 
 .search-choreographers-content {
-  display: grid;
+  /* display: grid; */
+  display: flex;
+  flex-direction: column;
   row-gap: 2rem;
   padding: 2.5rem;
+  min-height: 32.4rem;
+  background-color: var(--dark-aluminium);
+  overflow-x: auto;
 }
 
 @media only screen and (max-width: 480px) {
@@ -115,13 +129,10 @@
 }
 
 .search-choreographers-results-list {
-  /* display: grid; */
-  /* grid-template-columns: auto 1fr; */
   row-gap: .5rem;
-  /* column-gap: 1.25rem; */
-  /* grid-auto-rows: auto; */
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
 }
 
 .search-choreographers-results-list-row {
@@ -130,6 +141,7 @@
   /* grid-template-columns: auto auto 1fr; */
   display: flex;
   column-gap: 2rem;
+  flex-basis: 29rem;
 }
 
 .search-choreographers-results-list-cell {
@@ -151,19 +163,4 @@
   background-color: rgb(63, 139, 128);
 }
 
-/* .my-watches-row {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    width: 100%;
-  }
-  
-  .my-watches-column {
-    display: flex;
-    flex-direction: column;
-    flex-basis: auto;
-    flex: 1;
-    padding: .25rem;
-  } */
-  
   
