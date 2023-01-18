@@ -3,7 +3,10 @@ import {useState, useEffect} from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useApi, UseApiShowError } from '../hooks/use-api';
 import { PageLoader } from "../components/page-loader";
+import { List, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import AddBoxIcon from '@mui/icons-material/AddBox';
 
+  
 const SearchChoreographer = ({handleClose, handleAdd}) => {
 
     ///////////////////
@@ -56,7 +59,15 @@ const SearchChoreographer = ({handleClose, handleAdd}) => {
 
         // we added a user defined attribute (data-index) to the add button
         // to hold the index of the displayed result
-        const index =  parseInt(event.target.dataset.index);
+        // go up the tree to find the first parent with this property
+        // because the ListItemButton has a lot of child elements
+
+        let target = event.target;
+        while (target.dataset.index === undefined) {
+            target = target.parentElement;
+        }
+
+        const index =  parseInt(target.dataset.index);
         const choreographer = searchResult.matches[index];
         handleAdd(choreographer);
     }
@@ -97,22 +108,24 @@ const SearchChoreographer = ({handleClose, handleAdd}) => {
                     }
 
                     {!isLoading && !error && searchResult &&
-                        searchResult.matches.map((choreographer, index) => {
-                        return (
-                            <div className='search-choreographers-results-list-row'
-                                key={choreographer._id}>
-                                <button
-                                    className='button button--compact button--secondary search-choreographers-results-add-button'
-                                    onClick={onClickAdd}
-                                    data-index={index}>
-                                    Add
-                                </button>
-                            <div className="search-choreographers-results-list-cell">
-                                {`${choreographer.name}`}
-                            </div>
-                            </div>
-                        )
-                    })}
+                        <List>
+                            {searchResult.matches.map((choreographer, index) => {
+                            return (
+
+                                <ListItem key={choreographer._id}>
+                                    <ListItemButton data-index={index} onClick={onClickAdd}>
+                                        <ListItemIcon>
+                                            <AddBoxIcon />
+                                        </ListItemIcon>
+                                        <ListItemText primary={choreographer.name}>
+                                        </ListItemText>
+                                    </ListItemButton>
+                                </ListItem>
+
+                            )
+                            })}
+                        </List>
+                    }
                 </div>
             </div>
         </div>

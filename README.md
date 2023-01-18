@@ -11,7 +11,7 @@
 - X my watches not sorted on read
 - X fix api call from auth0 during login to use security
 - X use hook for post api call
-- multi-column search results
+- X multi-column search results
 - X don't close search dialog after adding
 - X no wait image
 - X dont change row spacing edit/non-edit modes
@@ -19,3 +19,5 @@
 - X briefly see edit buttons then blanks screen when switching from read to edit mode
 - set focus to search when add pressed - add used to show search and add used to add choreographer
 - remove choreographers from search list that are already being watched
+- add profile image to nav bar
+- full dance description in notification

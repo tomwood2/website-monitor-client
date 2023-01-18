@@ -61,11 +61,6 @@
   visibility: hidden;
 }
 
-.my-watches-delete-button {
-  /* align-self: flex-start; */
-  background-color: rgb(255, 106, 106);
-}
-
 .search-choreographers {
   display: flex;
   flex-direction: column;
@@ -149,18 +144,7 @@
   align-items: center;
 }
 
-/* .search-choreographers-results-list div {
-  display: flex;
-  align-items: center;
-} */
-
 .search-chroeographers-search-input {
   width: 32rem;
 }
-
-.search-choreographers-results-add-button {
-  min-width: 6rem;
-  background-color: rgb(63, 139, 128);
-}
-
   

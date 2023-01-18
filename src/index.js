@@ -5,9 +5,24 @@ import { createRoot} from 'react-dom/client';
 import { /*BrowserRouter,*/ HashRouter } from "react-router-dom";
 import App from "./App";
 import { Auth0ProviderWithHistory } from "./auth0-provider-with-history";
+import { ThemeProvider, createTheme } from "@mui/material";
+import {CssBaseline} from '@mui/material';
 
 import "./styles/styles.css";
 
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+  typography: {
+    fontSize: 16,
+    // Tell MUI what's the font-size on the html element is.
+    htmlFontSize: 16,
+    button: {
+      textTransform: 'none'
+    }
+  }
+});
 
 const root = createRoot(document.getElementById('root'));
 root.render(
@@ -15,7 +30,10 @@ root.render(
     {/* <BrowserRouter> */}
     <HashRouter>
       <Auth0ProviderWithHistory>
-        <App />
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+            <App />
+        </ThemeProvider>
       </Auth0ProviderWithHistory>
     </HashRouter>
     {/* </BrowserRouter> */}

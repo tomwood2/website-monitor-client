@@ -8,6 +8,9 @@ import {usePrevious} from '../hooks/use-previous';
 import {PageLayout} from '../components/page-layout';
 import {PageLoader} from "../components/page-loader";
 import {SearchChoreographer} from '../components/search-choreographer';
+import { List, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { Button, IconButton, Typography, Tooltip } from '@mui/material';
+import  DeleteIcon from '@mui/icons-material/DeleteOutline';
 
 const MyWatchesPage = () => {
 
@@ -157,7 +160,18 @@ const MyWatchesPage = () => {
   }
 
   const handleDelete = (event) => {
-    const index =  parseInt(event.target.dataset.index);
+
+    // we added a user defined attribute (data-index) to the add button
+    // to hold the index of the displayed result
+    // go up the tree to find the first parent with this property
+    // because the ListItemButton has a lot of child elements
+
+    let target = event.target;
+    while (target.dataset.index === undefined) {
+        target = target.parentElement;
+    }
+
+    const index =  parseInt(target.dataset.index);
     setChoreographers((choreographers) => {
       let newChoreographers = choreographers.slice();
       newChoreographers.splice(index, 1);
@@ -206,9 +220,9 @@ const MyWatchesPage = () => {
   return (
     <PageLayout>
       <div className="content-layout">
-        <h1 id="page-title" className="content__title">
+        <Typography variant='h3'>
           My Watches
-        </h1>
+        </Typography>
         <div className="my-watches-grid">
 
             {(isLoading || isSaving) &&
@@ -231,49 +245,46 @@ const MyWatchesPage = () => {
                 {/* don't show this until the initial api get completes
                   so it doesn't appear and then disappear after the get api completes */}
                 {!editMode && choreographers?.length === 0 && getSuccessIndex !== 0 &&
-                  <h3 className='my-watches-no-list'>You have no choreographer watches configured.</h3>
+                  <Typography variant='subtitle1'>
+                  You have no choreographer watches configured.
+                  </Typography>
                 }
 
                 {choreographers?.length > 0 &&
-                  <div className="my-watches-list">
-
-                  {choreographers.map((choreographer, index) => {
-                    return (
-                      <div key={choreographer._id} className='my-watches-list-row'>
-
-                        <div className='my-watches-list-cell'>
-                            <button 
-                              className={`button button--compact button--secondary my-watches-delete-button ${editMode ? '' : 'my-watches-hidden-button'}`}
-                              data-index={index}
-                              onClick={handleDelete}>
-                                Delete
-                            </button>
-                        </div>
-
-                        <div className='my-watches-list-cell'>
-                          {choreographer.name}
-                        </div>
-
-                      </div>
-                    )
+                  <List >
+                    {choreographers.map((choreographer, index) => {
+                      return (
+                        <ListItem key={choreographer._id}>
+                          <Tooltip title='delete'>
+                            <IconButton size='medium'
+                                color='info'
+                                className={`${editMode ? '' : 'my-watches-hidden-button'}`}
+                                data-index={index}
+                                onClick={handleDelete}>
+                                  <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <ListItemText primary={choreographer.name} />
+                        </ListItem>  
+                      );
                     })}
-                  </div>
+                  </List>
                 }
 
                 <div className='my-watches-button-bar'>
                   {/* don't show this until the initial read completes
                   so it doesn't bounce around the screen during startup */}
                   {!editMode && getSuccessIndex !== 0 &&
-                    <button className='button button--primary button--compact' onClick={handleSetEditMode}>Edit</button>
+                    <Button color='primary' variant='contained' onClick={handleSetEditMode}>Edit</Button>
                   }
                   {editMode &&
                     <>
                       {isModified &&
-                        <button className='button button--primary button--compact' onClick={handleSave}>Save</button>
+                        <Button color='primary' variant='outlined' onClick={handleSave}>Save</Button>
                       }
-                      <button className='button button--primary button--compact' onClick={handleCancel}>Cancel</button>
+                      <Button color='primary' variant='outlined' onClick={handleCancel}>Cancel</Button>
                       {!showSearch &&
-                        <button className='button button--primary button--compact' onClick={handleShowSearch}>Add</button>
+                        <Button color='primary' variant='outlined' onClick={handleShowSearch}>Add</Button>
                       }
                     </>
                   }
