@@ -1,13 +1,26 @@
 import React from "react";
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useRef } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Popover from '@mui/material/Popover';
+import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Tooltip } from '@mui/material';
+import AddBoxIcon from '@mui/icons-material/AddBox';
+import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
+import ClearIcon from '@mui/icons-material/Clear';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
+
 import { useApi, UseApiShowError } from '../hooks/use-api';
 import { PageLoader } from "../components/page-loader";
-import { List, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
-import AddBoxIcon from '@mui/icons-material/AddBox';
+import {usePrevious} from '../hooks/use-previous';
 
-  
-const SearchChoreographer = ({handleClose, handleAdd}) => {
+const SearchChoreographer = ({handleClose, handleAdd, searchValue, setSearchValue, choreographers, showSearch}) => {
 
     ///////////////////
     // constants
@@ -18,8 +31,24 @@ const SearchChoreographer = ({handleClose, handleAdd}) => {
     // begin hooks
 
     const {getAccessTokenWithPopup} = useAuth0();
-    const [searchValue, setSearchValue] = useState('');
-    const [searchResult, setSearchResult] = useState(null)
+    const [searchResult, setSearchResult] = useState(null);
+
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [popererText, setPopoverText] = useState('popover text');
+    const popoverTimerId = useRef(-1);
+    const apiCallDelayTimerId = useRef(-1);
+    const searchValueElement = useRef(null);
+
+    ///////////////////////////////////////////////////////////////////
+    // previous states - after all useState calls (some inside useApi)
+
+    const previousSearchValue = usePrevious(searchValue);
+  
+    const handleAddPopoverClose = () => {
+      setAnchorEl(null);
+    };
+  
+    const open = Boolean(anchorEl);
 
     const config = {
         audience: 'api.tomwood2.com',
@@ -36,12 +65,26 @@ const SearchChoreographer = ({handleClose, handleAdd}) => {
     // in the change array we get calls to the effect on every
     // render
     useEffect(() => {
-        if (searchValue === '') {
-            setSearchResult(null);
-        } else {
-            refreshSearchResult();
+        if (searchValue !== previousSearchValue) {
+            if (searchValue === '') {
+                setSearchResult(null);
+            } else {
+                // Delay calling in case we get
+                // another change immediately after this one
+
+                clearTimeout(apiCallDelayTimerId.current);
+                apiCallDelayTimerId.current = setTimeout(() => { console.log("calling refresh"); refreshSearchResult(); }, 300);
+            }
         }
-    }, [searchValue]);
+    }, [previousSearchValue, searchValue, refreshSearchResult]);
+
+    useEffect(() => {
+        // set focus to the search value input control
+        // whenever this component becomes visible
+        if (showSearch && searchValueElement.current) {
+            searchValueElement.current.focus();
+        }
+    }, [showSearch]);
 
     // end hooks
     ///////////////////
@@ -69,66 +112,130 @@ const SearchChoreographer = ({handleClose, handleAdd}) => {
 
         const index =  parseInt(target.dataset.index);
         const choreographer = searchResult.matches[index];
-        handleAdd(choreographer);
+        const added = handleAdd(choreographer);
+        if (added) {
+            // kill old timer in case it is still running
+            clearTimeout(popoverTimerId.current);
+            setPopoverText(`${choreographer.name} has been added.`);
+            setAnchorEl(event.currentTarget);
+            popoverTimerId.current = setTimeout(() => { setAnchorEl(null); popoverTimerId.current = -1; }, 2000);
+        }
     }
 
+    const handleClearSearchValue = () => setSearchValue('');
+    // close the search on escape key press
+    const handleKeyDown = (event) => {
+        if (event.code === 'Escape') {
+            handleClose();
+        }
+    };
+
+    // The Backdrop is sized to the entire viewport
+    // The Card is set to 80% of the Backdrop
+    // The CardHeader's height is set to its intrisic height (no flexGrow)
+    // the CardContent height is the Card's height minus the CardHeader height (flexGrow: 1)
+    // the list is 100% of the height of the CardContent
+    // we scroll the CardContent vertially if the List overflows
+
     return (
+        <Card sx={{ width: '80%', height: '80%', display: 'flex', flexDirection: 'column' }}
+            onKeyDown={handleKeyDown}
+            onClick={(event) => event.stopPropagation() }>
 
-        <div className="search-choreographers">
-            <div className='search-choreographers-title-bar'>
-                <span className="search-choreographers-title">Choreogrpher Search</span>
-                <button className='button__logout' onClick={handleClose}>Close</button>
+        <CardHeader sx={{ pb: 0 }}
+            action={
+                <Tooltip title='Close Search'>
+                    <IconButton aria-label="settings" onClick={handleClose}>
+                        <CloseIcon />
+                    </IconButton>
+                </Tooltip>
+            }
+            subheader={
+                <TextField
+                    fullWidth
+                    autoComplete='off'
+                    id="search-for"
+                    label='Search Choreographers'
+                    helperText="partial last name[,partial first name]"
+                    variant="filled"
+                    value={searchValue}
+                    onChange={onSearchValueChange}
+                    inputRef={searchValueElement}
+                    InputProps={{
+                        endAdornment:
+                            <InputAdornment position="end">
+                                <Tooltip title='Clear'>
+                                <IconButton
+                                    aria-label="clear search value"
+                                    onClick={handleClearSearchValue}
+                                    edge="end"
+                                    disabled={searchValue === ''}
+                                >
+                                    <ClearIcon sx={{fontSize: 'medium', visibility: searchValue === '' ? 'hidden' : 'visible'}} />
+                                </IconButton>
+                                </Tooltip>
+                            </InputAdornment>,
+                        startAdornment:
+                            <InputAdornment position="start">
+                                <SearchIcon />
+                            </InputAdornment>
+                        }
+                    }
+                />
+            }
+          />
+
+        <CardContent sx={{ flexGrow: 1, overflowY: 'auto', }}>
+
+            {isLoading &&
+            <div className="page-layout">
+                <PageLoader />
             </div>
-            <div className="search-choreographers-content">
+            }
 
-                <div className='search-choreographers-search-controls-container'>
-                    <label className='search-chroeographers-search-label' htmlFor="header-search">
-                        <span>Search For:</span>
-                    </label>
-                    <input
-                        className='search-chroeographers-search-input'
-                        type="text"
-                        id="header-search"
-                        placeholder="partial last name[,partial first name]"
-                        value={searchValue}
-                        onChange={onSearchValueChange}
-                    />
-                </div>
+            {error &&
+            <UseApiShowError error={error} getTokenAndTryAgain={getTokenAndTryAgain} />
+            }
 
-                <div className='search-choreographers-results-list'>
 
-                    {isLoading &&
-                    <div className="page-layout">
-                        <PageLoader />
-                    </div>
-                    }
+            {!isLoading && !error &&
+            <List sx={{ height: '100%' }}>
+                { searchResult &&
+                    searchResult.matches.map((choreographer, index) => {
+                    return (
 
-                    {error &&
-                    <UseApiShowError error={error} getTokenAndTryAgain={getTokenAndTryAgain} />
-                    }
+                    <ListItem key={choreographer._id} sx={{pb: 0}}>
+                        <ListItemButton disabled={choreographers.find(c => c._id === choreographer._id)} data-index={index} onClick={onClickAdd}>
+                            <ListItemIcon>
+                                <AddBoxIcon />
+                            </ListItemIcon>
+                            <ListItemText primary={choreographer.name}>
+                            </ListItemText>
+                        </ListItemButton>
+                        <Popover
+                            open={open}
+                            anchorEl={anchorEl}
+                            onClose={handleAddPopoverClose}
+                            anchorOrigin={{
+                                vertical: 'bottom',
+                                horizontal: 'left',
+                            }}
+                        >
+                            <Typography sx={{ p: 2 }}>{popererText}</Typography>
+                        </Popover>
 
-                    {!isLoading && !error && searchResult &&
-                        <List>
-                            {searchResult.matches.map((choreographer, index) => {
-                            return (
+                    </ListItem>
+                    )
+                })}
+            </List>
+            }
 
-                                <ListItem key={choreographer._id}>
-                                    <ListItemButton data-index={index} onClick={onClickAdd}>
-                                        <ListItemIcon>
-                                            <AddBoxIcon />
-                                        </ListItemIcon>
-                                        <ListItemText primary={choreographer.name}>
-                                        </ListItemText>
-                                    </ListItemButton>
-                                </ListItem>
-
-                            )
-                            })}
-                        </List>
-                    }
-                </div>
-            </div>
-        </div>
+        </CardContent>
+        {/* <CardActions>
+          <Button size="small" onClick={handleClose} >Close</Button>
+        </CardActions> */}
+        </Card>
+    //   </Box>
     );
 
 };

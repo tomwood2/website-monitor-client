@@ -18,6 +18,6 @@
 - index value on save, cancel, add buttons
 - X briefly see edit buttons then blanks screen when switching from read to edit mode
 - set focus to search when add pressed - add used to show search and add used to add choreographer
-- remove choreographers from search list that are already being watched
-- add profile image to nav bar
 - full dance description in notification
+- X disable search matches that already exist in choreographers
+- my-watches in a card or grid

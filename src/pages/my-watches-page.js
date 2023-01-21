@@ -8,9 +8,14 @@ import {usePrevious} from '../hooks/use-previous';
 import {PageLayout} from '../components/page-layout';
 import {PageLoader} from "../components/page-loader";
 import {SearchChoreographer} from '../components/search-choreographer';
-import { List, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
+import { List, ListItem, ListItemText } from '@mui/material';
 import { Button, IconButton, Typography, Tooltip } from '@mui/material';
-import  DeleteIcon from '@mui/icons-material/DeleteOutline';
+import DeleteIcon from '@mui/icons-material/DeleteOutline';
+import SearchIcon from '@mui/icons-material/Search';
+import EditIcon from '@mui/icons-material/Edit';
+import SaveIcon from '@mui/icons-material/Save';
+import Box from '@mui/material/Box';
+import Backdrop from '@mui/material/Backdrop';
 
 const MyWatchesPage = () => {
 
@@ -31,7 +36,7 @@ const MyWatchesPage = () => {
   const [choreographers, setChoreographers] = useState([]);
   const [, setPostChoreographersResult] = useState(null);
   const [pendingEditMode, setPendingEditMode] = useState(false);
-
+  const [searchValue, setSearchValue] = useState('');
   
   const getWatchesConfig = {
     audience: 'api.tomwood2.com',
@@ -61,7 +66,7 @@ const MyWatchesPage = () => {
 
   const previousGetSuccessIndex = usePrevious(getSuccessIndex);
   const previousPostChoreographersSuccessIndex = usePrevious(postChoreographersSuccessIndex);
-  const previousEditMode = usePrevious(editMode);
+  // const previousEditMode = usePrevious(editMode);
   
   // set our choreographers state whenever we read them from the api
   useEffect(() => {
@@ -104,6 +109,7 @@ const MyWatchesPage = () => {
     }
   }, [postChoreographersSuccessIndex, previousPostChoreographersSuccessIndex, pendingEditMode, choreographers]);
 
+  /*
   useEffect(() => {
 
     // only do this when edit mode changes
@@ -112,13 +118,14 @@ const MyWatchesPage = () => {
       // screen when choreo list is empty
       // but don't hide it if already showing
       if (editMode) {
+        setSearchValue('');
         setShowSearch(choreographers.length === 0);
       } else {
         setShowSearch(false);
       }
     }
   }, [editMode, previousEditMode, choreographers]);
-
+*/
   // end hooks
   ///////////////////
 
@@ -137,6 +144,7 @@ const MyWatchesPage = () => {
   };
 
   const handleShowSearch = () => {
+    setSearchValue('');
     setShowSearch(true);
   };
 
@@ -214,21 +222,23 @@ const MyWatchesPage = () => {
 
         return newChoreographers;
       });
+
+      // we save immediately when adding
+      postChoreographers();
     }
+
+    return found === undefined;
   };
 
   return (
     <PageLayout>
-      <div className="content-layout">
-        <Typography variant='h3'>
+      <Box>
+        <Typography variant='h4' sx={{mb: 2}}>
           My Watches
         </Typography>
-        <div className="my-watches-grid">
 
             {(isLoading || isSaving) &&
-              <div className="page-layout">
-                <PageLoader />
-              </div>
+              <PageLoader />
             }
 
             {error &&
@@ -241,7 +251,31 @@ const MyWatchesPage = () => {
 
             {!isLoading && !isSaving && !error && !postError && 
             <>
-              <div className='my-watches'>
+              <Box sx={{display: 'flex', gap: 1}}>
+                {/* don't show this until the initial read completes
+                so it doesn't bounce around the screen during startup */}
+                {!editMode && getSuccessIndex !== 0 &&
+                  <>
+                  <Button color='primary' variant='outlined' onClick={handleShowSearch} startIcon={<SearchIcon />}>
+                    Search
+                  </Button>
+                  <Button color='primary' variant='outlined' onClick={handleSetEditMode} startIcon={<EditIcon />}>
+                    Edit
+                  </Button>
+                  </>
+                }
+                {editMode &&
+                  <>
+                    {isModified &&
+                      <Button color='primary' variant='outlined' onClick={handleSave}  startIcon={<SaveIcon />}>
+                        Save
+                      </Button>
+                    }
+                    <Button color='primary' variant='outlined' onClick={handleCancel}>Cancel</Button>
+                  </>
+                }
+              </Box>
+
                 {/* don't show this until the initial api get completes
                   so it doesn't appear and then disappear after the get api completes */}
                 {!editMode && choreographers?.length === 0 && getSuccessIndex !== 0 &&
@@ -271,32 +305,27 @@ const MyWatchesPage = () => {
                   </List>
                 }
 
-                <div className='my-watches-button-bar'>
-                  {/* don't show this until the initial read completes
-                  so it doesn't bounce around the screen during startup */}
-                  {!editMode && getSuccessIndex !== 0 &&
-                    <Button color='primary' variant='contained' onClick={handleSetEditMode}>Edit</Button>
-                  }
-                  {editMode &&
-                    <>
-                      {isModified &&
-                        <Button color='primary' variant='outlined' onClick={handleSave}>Save</Button>
-                      }
-                      <Button color='primary' variant='outlined' onClick={handleCancel}>Cancel</Button>
-                      {!showSearch &&
-                        <Button color='primary' variant='outlined' onClick={handleShowSearch}>Add</Button>
-                      }
-                    </>
-                  }
-                </div>
-              </div>
-              {showSearch &&
+              {/* {showSearch &&
                   <SearchChoreographer handleClose={handleCloseSearch} handleAdd={handleAddWatch} />
-              }
+              } */}
+
+              <Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={showSearch}
+                onClick={handleCloseSearch}
+              >
+                <SearchChoreographer
+                  handleClose={handleCloseSearch}
+                  handleAdd={handleAddWatch}
+                  searchValue={searchValue}
+                  setSearchValue={setSearchValue}
+                  choreographers={choreographers}
+                  showSearch={showSearch}
+                  />
+              </Backdrop>
             </>
           }
-        </div>
-      </div>
+      </Box>
     </PageLayout>
   );
 };

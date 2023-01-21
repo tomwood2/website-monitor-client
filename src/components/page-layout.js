@@ -104,7 +104,7 @@ export const PageLayout = ({ children }) => {
   
   return (
     <Box>
-      <AppBar position="static" color='transparent'>
+      <AppBar position="static" color='info'>
         <Container maxWidth="xl">
           <Toolbar disableGutters>
 
@@ -159,16 +159,15 @@ export const PageLayout = ({ children }) => {
                   display: { xs: 'block', md: 'none' },
                 }}
               >
-              {pages.map((page) => {
-
-                if ((!page.unauthenticedOnly || (page.unauthenticedOnly && !isAuthenticated)) &&
-                  (!page.authenticatedOnly || (page.authenticatedOnly && isAuthenticated))) {
+              {pages.filter(page =>
+                  (!page.unauthenticedOnly || (page.unauthenticedOnly && !isAuthenticated)) &&
+                  (!page.authenticatedOnly || (page.authenticatedOnly && isAuthenticated)))
+                .map(page => {
                   return (
                     <MenuItem key={page.title} onClick={() => handleCloseNavMenu(page)}>
                       <Typography textAlign="center">{page.title}</Typography>
                     </MenuItem>
                   );
-                }
               })
               }
 
@@ -198,27 +197,26 @@ export const PageLayout = ({ children }) => {
 
             {/* non-mobile (nav buttons) */}
             <Box sx={{ mr: 1, flexGrow: 1, justifyContent: "flex-end", display: { xs: 'none', md: 'flex' } }}>
-              {pages.map((page) => {
-
-                if (!page.mobileOnly &&
-                  ((page.authenticatedOnly && isAuthenticated) || !page.authenticatedOnly)) {
+              {pages.filter(page =>
+                !page.mobileOnly &&
+                  ((page.authenticatedOnly && isAuthenticated) || !page.authenticatedOnly))
+                .map(page => {
                   return (
                     <Button
                       key={page.title}
-                      sx={{ my: 2, display: 'block' }}
+                      sx={{ my: 2, display: 'block', color: 'white' }}
                       onClick={() => handleCloseNavMenu(page)}
                     >
                       {page.title}
                     </Button>
                     );
-                }
               })}
             </Box>
 
             {/* non-mobile only when not logged in (signup and login buttons) */}
             {!isAuthenticated && (
               <Box sx={{ display: {xs: 'none', md: 'flex' }, gap: 1 }}>
-                <Button variant="outlined" sx={{ flexGrow: 0 }} onClick={handleSignUp}>
+                <Button variant="outlined" sx={{ flexGrow: 0, color: 'white', borderColor: 'white' }} onClick={handleSignUp}>
                   Sign Up
                 </Button>
                 <Button variant="contained" sx={{ flexGrow: 0 }} onClick={handleLogin}>
@@ -262,7 +260,9 @@ export const PageLayout = ({ children }) => {
           </Toolbar>
         </Container>
       </AppBar>
-      {children}
+      <Box sx={{ m: 5 }}>
+        {children}
+      </Box>
     </Box>
 
   );
