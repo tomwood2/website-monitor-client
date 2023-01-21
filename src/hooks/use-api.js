@@ -9,6 +9,10 @@ import {useEffect, useState} from 'react';
 import {useAuth0} from '@auth0/auth0-react';
 import axios from 'axios';
 import { usePrevious } from './use-previous';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+
 
 export const useApi = (setData, config = {}, callApiOnFirstRender = true) => {
 
@@ -83,20 +87,20 @@ export const UseApiShowError = ({error, getTokenAndTryAgain}) => {
 
   if (error?.error === 'consent_required') {
     return (
-      <div className='my-watches-error-panel'>
-        <h2 className="content__title">You must authorize this application to continue.</h2>
-        <button className='button button--primary button--compact' onClick={getTokenAndTryAgain}>View Authorization Form</button>
-      </div>
+      <Box>
+        <Typography variant='h4'>You must authorize this application to continue.</Typography>
+        <Button color='primary' variant='contained' onClick={getTokenAndTryAgain}>View Authorization Form</Button>
+      </Box>
       );
   }
 
   if (error?.error) {
     return (
-      <div className='my-watches-error-panel'>
-        <h2 className="content__title">Oops {error.message}!</h2>
-      </div>
+      <Box>
+        <Typography variant='h4'>Oops {error.message}!</Typography>
+      </Box>
     );
   }
 
-  return (<div></div>);
+  return (<Box></Box>);
 };

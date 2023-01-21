@@ -8,14 +8,18 @@ import {usePrevious} from '../hooks/use-previous';
 import {PageLayout} from '../components/page-layout';
 import {PageLoader} from "../components/page-loader";
 import {SearchChoreographer} from '../components/search-choreographer';
-import { List, ListItem, ListItemText } from '@mui/material';
-import { Button, IconButton, Typography, Tooltip } from '@mui/material';
+import {List, ListItem, ListItemText } from '@mui/material';
+import {IconButton, Typography, Tooltip } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
+import CancelIcon from '@mui/icons-material/Cancel';
 import Box from '@mui/material/Box';
 import Backdrop from '@mui/material/Backdrop';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CardContent from '@mui/material/CardContent';
 
 const MyWatchesPage = () => {
 
@@ -66,7 +70,6 @@ const MyWatchesPage = () => {
 
   const previousGetSuccessIndex = usePrevious(getSuccessIndex);
   const previousPostChoreographersSuccessIndex = usePrevious(postChoreographersSuccessIndex);
-  // const previousEditMode = usePrevious(editMode);
   
   // set our choreographers state whenever we read them from the api
   useEffect(() => {
@@ -109,24 +112,7 @@ const MyWatchesPage = () => {
     }
   }, [postChoreographersSuccessIndex, previousPostChoreographersSuccessIndex, pendingEditMode, choreographers]);
 
-  /*
-  useEffect(() => {
-
-    // only do this when edit mode changes
-    if (editMode !== previousEditMode) {
-      // automatically show the search
-      // screen when choreo list is empty
-      // but don't hide it if already showing
-      if (editMode) {
-        setSearchValue('');
-        setShowSearch(choreographers.length === 0);
-      } else {
-        setShowSearch(false);
-      }
-    }
-  }, [editMode, previousEditMode, choreographers]);
-*/
-  // end hooks
+    // end hooks
   ///////////////////
 
   const getTokenAndTryAgain = async () => {
@@ -232,10 +218,47 @@ const MyWatchesPage = () => {
 
   return (
     <PageLayout>
-      <Box>
-        <Typography variant='h4' sx={{mb: 2}}>
-          My Watches
-        </Typography>
+      <Card>
+        <CardHeader title='My Watches'
+        
+          action={
+            !isLoading && !isSaving && !error && !postError &&
+            <Box sx={{display: 'flex', gap: 1}}>
+                {!editMode && getSuccessIndex !== 0 &&
+                  <>
+                  <Tooltip title='Search Choreographers'>
+                  <IconButton color='primary' size='small' variant='outlined' onClick={handleShowSearch}>
+                    <SearchIcon fontSize='small' />
+                  </IconButton>
+                  </Tooltip>
+                  <Tooltip title='Edit List'>
+                  <IconButton color='primary' size='small' variant='outlined' onClick={handleSetEditMode}>
+                    <EditIcon fontSize='small'/> 
+                  </IconButton>
+                  </Tooltip>
+                  </>
+                }
+                {editMode &&
+                  <>
+                    {isModified &&
+                      <Tooltip title='Save'>
+                      <IconButton color='primary' size='small' variant='outlined' onClick={handleSave}>
+                        <SaveIcon fontSize='small' />
+                      </IconButton>
+                      </Tooltip>
+                    }
+                    <Tooltip title='Cancel'>
+                    <IconButton color='primary' size='small'  variant='outlined' onClick={handleCancel}>
+                      <CancelIcon fontSize='small' />
+                    </IconButton>
+                    </Tooltip>
+                  </>
+                }
+              </Box>
+          }
+        />
+
+        <CardContent>
 
             {(isLoading || isSaving) &&
               <PageLoader />
@@ -251,31 +274,6 @@ const MyWatchesPage = () => {
 
             {!isLoading && !isSaving && !error && !postError && 
             <>
-              <Box sx={{display: 'flex', gap: 1}}>
-                {/* don't show this until the initial read completes
-                so it doesn't bounce around the screen during startup */}
-                {!editMode && getSuccessIndex !== 0 &&
-                  <>
-                  <Button color='primary' variant='outlined' onClick={handleShowSearch} startIcon={<SearchIcon />}>
-                    Search
-                  </Button>
-                  <Button color='primary' variant='outlined' onClick={handleSetEditMode} startIcon={<EditIcon />}>
-                    Edit
-                  </Button>
-                  </>
-                }
-                {editMode &&
-                  <>
-                    {isModified &&
-                      <Button color='primary' variant='outlined' onClick={handleSave}  startIcon={<SaveIcon />}>
-                        Save
-                      </Button>
-                    }
-                    <Button color='primary' variant='outlined' onClick={handleCancel}>Cancel</Button>
-                  </>
-                }
-              </Box>
-
                 {/* don't show this until the initial api get completes
                   so it doesn't appear and then disappear after the get api completes */}
                 {!editMode && choreographers?.length === 0 && getSuccessIndex !== 0 &&
@@ -289,13 +287,13 @@ const MyWatchesPage = () => {
                     {choreographers.map((choreographer, index) => {
                       return (
                         <ListItem key={choreographer._id}>
-                          <Tooltip title='delete'>
-                            <IconButton size='medium'
+                          <Tooltip title='Delete'>
+                            <IconButton size='small'
                                 color='info'
-                                className={`${editMode ? '' : 'my-watches-hidden-button'}`}
+                                sx={{visibility: editMode ? 'visible' : 'collapse'}}
                                 data-index={index}
                                 onClick={handleDelete}>
-                                  <DeleteIcon />
+                                  <DeleteIcon fontSize='medium'/>
                             </IconButton>
                           </Tooltip>
                           <ListItemText primary={choreographer.name} />
@@ -304,10 +302,6 @@ const MyWatchesPage = () => {
                     })}
                   </List>
                 }
-
-              {/* {showSearch &&
-                  <SearchChoreographer handleClose={handleCloseSearch} handleAdd={handleAddWatch} />
-              } */}
 
               <Backdrop
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
@@ -325,7 +319,8 @@ const MyWatchesPage = () => {
               </Backdrop>
             </>
           }
-      </Box>
+          </CardContent>
+      </Card>
     </PageLayout>
   );
 };

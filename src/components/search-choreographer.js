@@ -145,8 +145,8 @@ const SearchChoreographer = ({handleClose, handleAdd, searchValue, setSearchValu
         <CardHeader sx={{ pb: 0 }}
             action={
                 <Tooltip title='Close Search'>
-                    <IconButton aria-label="settings" onClick={handleClose}>
-                        <CloseIcon />
+                    <IconButton size='small' aria-label="close search" onClick={handleClose}>
+                        <CloseIcon fontSize="small"/>
                     </IconButton>
                 </Tooltip>
             }
@@ -171,7 +171,7 @@ const SearchChoreographer = ({handleClose, handleAdd, searchValue, setSearchValu
                                     edge="end"
                                     disabled={searchValue === ''}
                                 >
-                                    <ClearIcon sx={{fontSize: 'medium', visibility: searchValue === '' ? 'hidden' : 'visible'}} />
+                                    <ClearIcon sx={{fontSize: 'small', visibility: searchValue === '' ? 'hidden' : 'visible'}} />
                                 </IconButton>
                                 </Tooltip>
                             </InputAdornment>,
@@ -188,15 +188,12 @@ const SearchChoreographer = ({handleClose, handleAdd, searchValue, setSearchValu
         <CardContent sx={{ flexGrow: 1, overflowY: 'auto', }}>
 
             {isLoading &&
-            <div className="page-layout">
-                <PageLoader />
-            </div>
+            <PageLoader />
             }
 
             {error &&
             <UseApiShowError error={error} getTokenAndTryAgain={getTokenAndTryAgain} />
             }
-
 
             {!isLoading && !error &&
             <List sx={{ height: '100%' }}>

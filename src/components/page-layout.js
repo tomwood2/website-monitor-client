@@ -228,7 +228,7 @@ export const PageLayout = ({ children }) => {
             {/* mobile & non-mobile when logged in (avatar with user menu items) */}
             {isAuthenticated && (
             <Box sx={{ flexGrow: 0 }}>
-              <Tooltip title="Open settings">
+              <Tooltip title="User Menu">
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                   <Avatar alt="Remy Sharp" src={user.picture} />
                 </IconButton>
