@@ -94,7 +94,7 @@ export const UseApiShowError = ({error, getTokenAndTryAgain}) => {
       );
   }
 
-  if (error?.error) {
+  if (error?.message) {
     return (
       <Box>
         <Typography variant='h4'>Oops {error.message}!</Typography>

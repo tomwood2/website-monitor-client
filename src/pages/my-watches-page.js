@@ -122,7 +122,7 @@ const MyWatchesPage = () => {
 
   const getPostTokenAndTryAgain = async () => {
     await getAccessTokenWithPopup(postChoreogrphersConfig);
-    getApiChoreographers();
+    postChoreographers();
   };
 
   const handleCloseSearch = () => {
@@ -260,7 +260,7 @@ const MyWatchesPage = () => {
 
         <CardContent>
 
-            {(isLoading || isSaving) &&
+            {(isLoading || isSaving || getSuccessIndex === 0) &&
               <PageLoader />
             }
 
