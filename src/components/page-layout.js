@@ -3,8 +3,6 @@ import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useNavigate } from "react-router-dom";
 
-// import { NavBar } from "./navigation/desktop/nav-bar";
-// import { MobileNavBar } from "./navigation/mobile/mobile-nav-bar";
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -19,9 +17,7 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
 
-const title = 'Choreographer Watch';
-
-// const pages = ['Public', 'My Watches', 'Admin'];
+const title = 'Step Sheet Watch';
 
 const pages = [
   {title: 'Public', route: '/public' },
@@ -37,13 +33,6 @@ const userMenuItems = [
 ];
 
 export const PageLayout = ({ children }) => {
-  // return (
-  //   <div className="page-layout">
-  //     <NavBar />
-  //     <MobileNavBar />
-  //     <div className="page-layout__content">{children}</div>
-  //   </div>
-  // );
   const { user, isAuthenticated, loginWithRedirect, logout } = useAuth0();
   const navigate = useNavigate();
 

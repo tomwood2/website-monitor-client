@@ -1,12 +1,12 @@
 import React from 'react';
 import {withAuthenticationRequired} from "@auth0/auth0-react";
-import './my-watches-page.css';
 import {useState, useEffect} from 'react';
 import {useAuth0} from '@auth0/auth0-react';
 import {useApi, UseApiShowError} from '../hooks/use-api';
 import {usePrevious} from '../hooks/use-previous';
 import {PageLayout} from '../components/page-layout';
 import {PageLoader} from "../components/page-loader";
+import {LeavePageDialog} from "../components/leave-page-dialog";
 import {SearchChoreographer} from '../components/search-choreographer';
 import {List, ListItem, ListItemText } from '@mui/material';
 import {IconButton, Typography, Tooltip } from '@mui/material';
@@ -218,6 +218,7 @@ const MyWatchesPage = () => {
 
   return (
     <PageLayout>
+      <LeavePageDialog isModified={isModified}/>
       <Card>
         <CardHeader title='My Watches'
         

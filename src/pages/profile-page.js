@@ -1,14 +1,13 @@
-import React from "react";
+import React, { useRef } from "react";
 import {useState, useEffect} from 'react';
 import {withAuthenticationRequired} from "@auth0/auth0-react";
 import {useAuth0} from "@auth0/auth0-react";
-// import { CodeSnippet } from "../components/code-snippet";
 import {useApi, UseApiShowError} from '../hooks/use-api';
 import {usePrevious} from '../hooks/use-previous';
 
 import {PageLayout} from "../components/page-layout";
 import {PageLoader} from "../components/page-loader";
-
+import {LeavePageDialog} from '../components/leave-page-dialog';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
@@ -56,6 +55,7 @@ const ProfilePage = () => {
   const [isModified, setIsModified] = useState(false);
   const [formErrors, setFormErrors] = useState(null);
 
+  const firstNameElement = useRef();
 
   const userId = auth0User['https://tomwood2.com/_id']; // funky property name
 
@@ -66,9 +66,29 @@ const ProfilePage = () => {
     url: `${baseUrl}users/id/${userId}`,  
   }
 
+  const setApiUserHook = (apiUser) => {
+
+    // we don't want to include __v, _id and pushover._id
+    // because it causes issues when comparing apiUser and user
+    let newApiUser = {
+      firstName: apiUser.firstName,
+      lastName: apiUser.lastName,
+      emailNotify: apiUser.emailNotify,
+    }
+
+    if (apiUser.pushover !== undefined) {
+      newApiUser.pushover = {
+        user: apiUser.pushover.user,
+        device: apiUser.pushover.device,
+      }
+    }
+
+    setApiUser(newApiUser);
+  };
+
   // read apiUser
   const {isLoading, error, apiSuccessIndex: getApiUserSuccessIndex, refresh: getApiUser } =
-    useApi(setApiUser, getApiUserConfig);
+    useApi(setApiUserHook, getApiUserConfig);
 
   const postUserConfig = {
     audience: 'api.tomwood2.com',
@@ -123,8 +143,13 @@ const ProfilePage = () => {
         const obj1Value = obj1[propertyNames1[i]];
         const obj2Value = obj2[propertyNames1[i]];
 
-        if (isObject(obj1Value) && !deepEqual(obj1Value, obj2Value)) {
-          return false;
+        if (isObject(obj1Value)) {
+
+          if (!deepEqual(obj1Value, obj2Value)) {
+            return false;
+          }
+
+          continue;
         }
 
         if (obj1Value !== obj2Value) {
@@ -180,6 +205,14 @@ const ProfilePage = () => {
       }
     }
   }, [postUserSuccessIndex, previousPostUserSuccessIndex, pendingEditMode, user]);
+
+  useEffect(() => {
+    // set focus to the first name input control
+    // whenever we enter editMode
+    if (editMode && firstNameElement.current) {
+      firstNameElement.current.focus();
+    }
+  }, [editMode]);
 
   // end hooks
   ///////////////////
@@ -268,6 +301,7 @@ const ProfilePage = () => {
 
   return (
     <PageLayout>
+      <LeavePageDialog isModified={isModified}/>
       <Card>
         <CardHeader title='My Profile' subheader={(<span>{apiUser ? (apiUser.firstName + ' ' + apiUser.lastName) : auth0User.name}<br/>{auth0User.email}</span>)}
           action={
@@ -276,7 +310,8 @@ const ProfilePage = () => {
             {!editMode && getApiUserSuccessIndex !== 0 &&
               <>
               <Tooltip title='Edit'>
-              <IconButton color='primary' size='small' variant='outlined' onClick={handleSetEditMode}>
+              <IconButton color='primary' size='small'
+                variant='outlined' onClick={handleSetEditMode}>
                 <EditIcon fontSize='small'/> 
               </IconButton>
               </Tooltip>
@@ -336,6 +371,7 @@ const ProfilePage = () => {
                     }
                     {field.type === 1 &&
                       <TextField
+                        inputRef={index === 0 ? firstNameElement : null}
                         variant='outlined'
                         fullWidth
                         label={editMode ? 'Required' : ''}
