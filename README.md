@@ -15,7 +15,6 @@
 - X don't close search dialog after adding
 - X no wait image
 - X dont change row spacing edit/non-edit modes
-- index value on save, cancel, add buttons
 - X briefly see edit buttons then blanks screen when switching from read to edit mode
 - X set focus to search when add pressed - add used to show search and add used to add choreographer
 - full dance description in notification
